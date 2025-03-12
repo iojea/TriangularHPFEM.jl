@@ -1,0 +1,13 @@
+name = "TriangularhpFEM"
+uuid = "563cddf2-6e0b-42e9-b4ef-ce1a8aa3ba4e"
+authors = ["Ignacio Ojea"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
