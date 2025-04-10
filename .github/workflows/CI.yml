@@ -73,6 +73,6 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Documenter: DocMeta, doctest
-          using TriangularhpFEM
-          DocMeta.setdocmeta!(TriangularhpFEM, :DocTestSetup, :(using TriangularhpFEM); recursive=true)
+          using TriangularHPFEM
+          DocMeta.setdocmeta!(TriangularhpFEM, :DocTestSetup, :(using TriangularHPFEM); recursive=true)
           doctest(TriangularhpFEM)
