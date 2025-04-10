@@ -1,8 +1,8 @@
-# TriangularhpFEM
+# TriangularHPFEM
 
 
 <p align="center">
-    <img width="200px" src="https://github.com/iojea/hpFEM/blob/main/docs/assets/logo_text.png"/>
+    <img width="200px" src="https://github.com/iojea/TriangularHPFEM/blob/main/docs/assets/logo_text.png"/>
 </p> 
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://iojea.github.io/TriangularhpFEM.jl/stable/)
