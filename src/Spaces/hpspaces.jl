@@ -33,6 +33,10 @@ end
 
 LinearAlgebra.:⋅(a::VectorHPSpace,b::VectorHPSpace) = OperationField(⋅,(a,b))
 Base.:*(a::ScalarHPSpace,b::AbstractHPSpace) = OperationField(*,(a,b))
+Base.:*(m::Array,a::VectorHPSpace) = OperationField(*,(m,a))
+Base.:*(f::Function,a::VectorHPSpace) = OperationField(*,(f,a))
+
+
 
 
 
