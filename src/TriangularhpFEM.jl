@@ -21,7 +21,7 @@ end
 @publish Meshes circmesh_graded_center
 @publish Meshes rectmesh
 @publish Meshes show
-@publish Meshes plotmeshhp
+@publish Meshes plothpmesh
 @publish Meshes animate_refinement
 
 @publish Quadratures QScheme

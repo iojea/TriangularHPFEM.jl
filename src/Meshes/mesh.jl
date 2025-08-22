@@ -1,6 +1,6 @@
 const TriangleList{I,P,F} = Dictionary{HPTriangle{I},TriangleProperties{P,F}} where {I,P,F}
 const EdgeList{I,P} = Dictionary{HPEdge{I},EdgeProperties{P,Bool}} where {I,P}
-const AuxList{P,N,F} = Dictionary{NTuple{3,P},AuxData{N,F}} where {P,N,F}
+#const AuxList{P,N,F} = Dictionary{NTuple{3,P},AuxData{N,F}} where {P,N,F}
 
 
 abstract type HPTriangulation end
@@ -20,15 +20,15 @@ builds an `HPMesh` from a `Triangulate.TriangulatioIO` struct.
 
 Meshes of type `HPMesh` can also be constructed using the helper functions such us `circmesh`, `rectmesh`, `squaremesh`. For a more general constructor, check the docs for `meshhp`.
 """
-struct HPMesh{F<:AbstractFloat,I<:Integer,P<:Integer,N} <: HPTriangulation
+struct HPMesh{F<:AbstractFloat,I<:Integer,P<:Integer} <: HPTriangulation
     points::Vector{HPPoint{2,F}} #ElasticMatrix{F,Vector{F}}
     trilist::TriangleList{I,P,F}
     edgelist::EdgeList{I,P}
-    auxdata::AuxList{P,N,F}   
+    #auxdata::AuxList{P,N,F}   
 end
 
-function HPMesh(mat::Matrix,tris::TriangleList,edgs::EdgeList,aux::AuxList)
-    HPMesh(HPPoint.(eachcol(mat)),tris,edgs,aux)
+function HPMesh(mat::Matrix,tris::TriangleList,edgs::EdgeList)
+    HPMesh(HPPoint.(eachcol(mat)),tris,edgs)
 end
 
 function maybeconvert(::Type{T},arr::AbstractArray) where T
@@ -41,8 +41,7 @@ function HPMesh{F,I,P}(tri::TriangulateIO) where {F,I,P}
     edgelist = maybeconvert(I,edgelist)
     triangles = dictionary([triangle(I,t,pointlist) => TriangleProperties(P,F) for t in eachcol(trianglelist)])
     edges = dictionary([HPEdge(e) => EdgeProperties(one(P),P(edgemarkerlist[i]),false) for (i,e) in enumerate(eachcol(edgelist))] )
-    aux = dictionary([degs(P,1,1,1) => AuxData(F,degs(P,1,1,1))])
-    HPMesh(points,triangles,edges,aux)
+    HPMesh(points,triangles,edges)
 end
 
 function Base.copy(mesh::HPMesh)

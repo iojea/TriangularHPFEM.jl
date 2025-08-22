@@ -10,7 +10,8 @@ using Triangulate
 using StaticArrays
 using DocStringExtensions
 
-export HPTriangulation,HPPoint,HPEdge,HPTriangle,HPMesh,AuxData
+
+export HPTriangulation,HPPoint,HPEdge,HPTriangle,HPMesh
 export meshhp,circmesh,circmesh_graded_center,rectmesh
 export show, plothpmesh, animate_refinement
 
@@ -19,7 +20,6 @@ include("tuplehp.jl")
 include("point.jl")
 include("edge.jl")
 include("triangle.jl")
-include("auxiliarydata.jl")
 include("mesh.jl")
 include("refine.jl")
 include("show.jl")

@@ -5,15 +5,16 @@ module Quadratures
 
 using LinearAlgebra
 using StaticArrays
+using Dictionaries
 using HyperDualNumbers
 using TriangularhpFEM.Meshes
 
+include("auxiliarydata.jl")
 include("refelement.jl")
 include("gmquads.jl")
 include("measures.jl")
 
-
-export QScheme, Measure
+export QScheme, Measure, AuxDegData
 export gmquadrature
 
 

@@ -1,15 +1,15 @@
-struct AuxData{N,F<:AbstractFloat}
+struct AuxDegData{N,F<:AbstractFloat}
     ∂nodes::Vector{SVector{2,F}}
     C::SMatrix{N,N,F}
     local_tensors::Vector{Array{F}}
 end
 
-function AuxData(::Type{F},p::NTuple{3,P}) where {F<:AbstractFloat,P<:Integer}
+function AuxDegData(::Type{F},p::NTuple{3,P}) where {F<:AbstractFloat,P<:Integer}
     ∂nodes = boundary_nodes(F,p)
-    C = matrix_C(p)
+    C = matrix_C(p,∂nodes)
     N = size(C,1)
     local_tensors = Vector{Array{F}}()
-    AuxData{N,F}(∂nodes,C,local_tensors)
+    AuxDegData{N,F}(∂nodes,C,local_tensors)
 end
 
 degs(::Type{P},p₁,p₂,p₃) where {P<:Integer} = (P(p₁),P(p₂),P(p₃))
