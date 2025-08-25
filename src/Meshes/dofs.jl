@@ -3,10 +3,11 @@ struct DOFs{I<:Integer}
     by_tri::Dictionary{HPTriangle{I},Vector{I}}
 end
 
-function DOFs(mesh::HPMesh)
-    by_edge = degrees_of_freedom_by_edge(mesh)
-    by_tri = degrees_of_freedom(mesh,by_edge)
-    DOFs(by_edge,by_tri)
+DOFs(::type{I}) where I<:Integer = DOFs(Dictionary{HPEdge{I}},Vector{I}(),Dictionary{HPTriangle{I},Vector{I}}())
+
+function DOFs!(mesh::HPMesh)
+    degrees_of_freedom_by_edge!(mesh)
+    degrees_of_freedom!(mesh)
 end
 
 """
@@ -14,16 +15,15 @@ end
 
 Creates a dictionary (from `Dictionaries.jl`) where the keys are the edges of `mesh` and the values are vectors with indices corresponding to the nodal degrees of freedom. 
 """
-function degrees_of_freedom_by_edge(mesh::HPMesh{F,I,P}) where {F,I,P}
-    (;edgelist) = mesh 
-    by_edge  = similar(mesh.edgelist,SVector{})
-    i        = size(mesh.points,2)+1
+function degrees_of_freedom_by_edge!(mesh::HPMesh{F,I,P}) where {F,I,P}
+    (;points,edgelist,dofs) = mesh 
+    by_edge  = dofs.by_edge
+    i        = size(points,2)+1
     for edge in edges(edgelist)
         med  = collect(i:i+degree(edgelist[edge])-2)
         set!(by_edge,edge,SVector{degree(edgelist[edge]),I}[edge[1],med...,edge[2]])
         i   += degree(edgelist[edge])-1
     end
-    return by_edge
 end
 
 """
@@ -37,31 +37,29 @@ If a dictionary of degrees of freedom by edge has already been computed, it is r
 
     degrees_of_freedom(mesh::HPMesh{F,I,P},by_edge::Dictionary{HPEdge{I},Vector{I}}) where {F,I,P}
 """
-function degrees_of_freedom(mesh::HPMesh{F,I,P}) where {F,I,P}
-    by_edge = degrees_of_freedom_by_edge(mesh)
-    degrees_of_freedom(mesh,by_edge)
-end
-function degrees_of_freedom(mesh::HPMesh{F,I,P},by_edge::Dictionary{HPEdge{I},Vector{I}}) where {F,I,P}
-    (;edgelist,trilist) = mesh
-    dof     = similar(trilist,Vector{I})
+function degrees_of_freedom!(mesh::HPMesh{F,I,P}) where {F,I,P}
+    (;edgelist,trilist,dofs) = mesh
+    (;by_edge,by_tri) = dofs
+    if isempty(dofs.by_edge)
+        degrees_of_freedom_by_edge!(mesh)
+    end
     k       = maximum(maximum.(by_edge))+1 #first non-edge dof
     for t in triangles(trilist)
         p,t_edges = pedges(t,mesh)
-        dof[t]  = zeros(I,compute_dimension(p))
+        by_tri[t]  = zeros(I,compute_dimension(p))
         j = 1 #counter of dof in current triangle
         @inbounds for i in 1:3
             newdof = by_edge[t_edges[i]]
             if  same_order(t_edges[i],edgelist)
-                dof[t][j:j+length(newdof)-2] .= newdof[1:end-1]
+                by_tri[t][j:j+length(newdof)-2] .= newdof[1:end-1]
             else
-                dof[t][j:j+length(newdof)-2] .= reverse(newdof[2:end])
+                by_tri[t][j:j+length(newdof)-2] .= reverse(newdof[2:end])
             end 
             j += length(newdof)-1
         end
-        dof[t][j:end] = k:k+(length(dof[t])-j)
-        k += length(dof[t])-j + 1
+        by_tri[t][j:end] = k:k+(length(dof[t])-j)
+        k += length(by_tri[t])-j + 1
     end
-    return dof
 end
 
 
@@ -72,15 +70,19 @@ Returs a list of indices corresponding to the degrees of freedom marked with `ma
 
 Internally, `marked_dof` 
 """
+function marked_dof(mesh::HPMesh{F,I,P},marker::N) where {F,I,P,N<:Integer}
+    marked_dof(mesh,[marker])
+end
 function marked_dof(mesh::HPMesh{F,I,P},marker) where {F,I,P}
-    by_edge = degrees_of_freedom_by_edge(mesh)
-    marked_dof(mesh,by_edge,marker)
+    (;dofs) = mesh
+    if isempty(dofs.by_edge)
+        degrees_of_freedom_by_edge!(mesh)
+    end
+    _marked_dof(mesh,marker)
 end
-function marked_dof(mesh::HPMesh{F,I,P},by_edge,marker::N) where {F,I,P,N<:Integer}
-    marked_dof(mesh,by_edge,[marker])
-end
-function marked_dof(mesh::HPMesh{F,I,P},by_edge,markerslist::AbstractVector) where {F,I,P}
-    (;edgelist) = mesh
+function _marked_dof(mesh::HPMesh{F,I,P},markerslist::AbstractVector) where {F,I,P}
+    (;edgelist,dofs) = mesh
+    (;by_edge) = dofs
     v = Vector{I}()
     for e in edges(edgelist)
         if marker(edgelist[e]) in markerslist

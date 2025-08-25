@@ -1,9 +1,10 @@
 const AuxMeshData{P,N,F} = Dictionary{NTuple{3,P},AuxDegData{N,F}} where {P,N,F}
 
-struct Measure{T<:HPTriangulation,P,N,F,Q<:QScheme}
+struct Measure{T<:HPTriangulation,P,I,N,F,Q<:QScheme}
     mesh::T
     aux::AuxMeshData{P,N,F}
     schs::Vector{Q}
+    dofs::DOFs{I}
 end
 
 function Measure(mesh::HPMesh{F,P,I}) where {F,P,I}

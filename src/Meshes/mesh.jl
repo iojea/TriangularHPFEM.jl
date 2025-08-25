@@ -24,9 +24,11 @@ struct HPMesh{F<:AbstractFloat,I<:Integer,P<:Integer} <: HPTriangulation
     points::Vector{HPPoint{2,F}} #ElasticMatrix{F,Vector{F}}
     trilist::TriangleList{I,P,F}
     edgelist::EdgeList{I,P}
+    dofs::DOFs{I}
     #auxdata::AuxList{P,N,F}   
 end
 
+HPMesh(v,t,e) = new(v,t,e,)
 function HPMesh(mat::Matrix,tris::TriangleList,edgs::EdgeList)
     HPMesh(HPPoint.(eachcol(mat)),tris,edgs)
 end

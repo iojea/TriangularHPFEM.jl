@@ -8,7 +8,6 @@ using TriangularhpFEM.Quadratures
 
 
 include("basis.jl")
-include("dofs.jl")
 include("hpspaces.jl")
 
 export BasisIterator,StdScalarSpace,GradientSpace
