@@ -14,17 +14,17 @@ Returns the index stored in the triangle at index `k` mod 3.
 """
     edges(t::HPTriangle)
 
-Return a vector of edges with type `EdgeHP`, containing the edges of `t`.
+Return a vector of edges with type `HPEdge`, containing the edges of `t`.
 """
-@inline edges(t::HPTriangle)   = [EdgeHP(_eval(t,i),_eval(t,i+1)) for i in 1:3]
+@inline edges(t::HPTriangle)   = [HPEdge(_eval(t,i),_eval(t,i+1)) for i in 1:3]
 
 
 """ 
     longestedge(t::HPTriangle)
 
-Returns an `EdgeHP` with the longest edge of `t`.
+Returns an `HPEdge` with the longest edge of `t`.
 """
- @inline longestedge(t::HPTriangle) = EdgeHP(_eval(t,1),_eval(t,2))
+ @inline longestedge(t::HPTriangle) = HPEdge(_eval(t,1),_eval(t,2))
 
 
 """

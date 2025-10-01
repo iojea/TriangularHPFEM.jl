@@ -17,7 +17,6 @@ const ∇ = gradient
 
 struct TestSpace{T<:AbstractHPSpace} <: AbstractHPSpace
     space::T
-    dofs::DOFs
 end
 
 struct TrialSpace{T<:AbstractHPSpace,F<:Function} <:AbstractHPSpace

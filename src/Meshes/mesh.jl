@@ -2,6 +2,14 @@ const TriangleList{I,P,F} = Dictionary{HPTriangle{I},TriangleProperties{P,F}} wh
 const EdgeList{I,P} = Dictionary{HPEdge{I},EdgeProperties{P,Bool}} where {I,P}
 #const AuxList{P,N,F} = Dictionary{NTuple{3,P},AuxData{N,F}} where {P,N,F}
 
+struct DOFs{I<:Integer}
+    by_edge::Dictionary{HPEdge{I},Vector{I}}
+    by_tri::Dictionary{HPTriangle{I},Vector{I}}
+end
+
+DOFs(::Type{I}) where I<:Integer = DOFs(Dictionary{HPEdge{I},Vector{I}}(),Dictionary{HPTriangle{I},Vector{I}}())
+
+
 
 abstract type HPTriangulation end
 
@@ -13,22 +21,23 @@ A mesh for `HP` finite element methods. Its fields are:
     + `points::Vector{HPPoint{2,F}}`: a vector of points
     + `trilist::TriangleList{I,P,F}`: set of trilist
     + `edgelist::EdgeList{I,P}`: set of edgelist
-    + `auxlist::AuxList{P,N,F}`: auxiliary data for integrating the 
+    + `dofs::DOFs{I}`: auxiliary data for integrating the 
 
     HPMesh(tri::TriangulationIO)
 builds an `HPMesh` from a `Triangulate.TriangulatioIO` struct.
 
-Meshes of type `HPMesh` can also be constructed using the helper functions such us `circmesh`, `rectmesh`, `squaremesh`. For a more general constructor, check the docs for `meshhp`.
+    Meshes of type `HPMesh` can also be constructed using the helper functions such us `circmesh`, `rectmesh`, `squaremesh`. For a more general constructor, check the docs for `meshhp`.
 """
 struct HPMesh{F<:AbstractFloat,I<:Integer,P<:Integer} <: HPTriangulation
     points::Vector{HPPoint{2,F}} #ElasticMatrix{F,Vector{F}}
     trilist::TriangleList{I,P,F}
     edgelist::EdgeList{I,P}
     dofs::DOFs{I}
-    #auxdata::AuxList{P,N,F}   
 end
 
-HPMesh(v,t,e) = new(v,t,e,)
+#DEFINE THIS!
+HPMesh(v,t::TriangleList{I,P,F},e::EdgeList{I,P}) where {I,P,F} = HPMesh(v,t,e,DOFs(I))
+
 function HPMesh(mat::Matrix,tris::TriangleList,edgs::EdgeList)
     HPMesh(HPPoint.(eachcol(mat)),tris,edgs)
 end
@@ -95,7 +104,7 @@ Given a triangle `t` belonging to a `mesh`, it returns the (sorted) degrees
 """
 function pedges(t::HPTriangle{I},mesh::HPMesh{F,I,P}) where {F,I,P}
     p,nod = pnodes(t,mesh)
-    eds   = (HPEdge(nod[SVector(i,mod1(i+1,3))]) for i in 1:3)
+    eds   = [HPEdge(nod[SVector(i,mod1(i+1,3))]) for i in 1:3]
     p,eds
 end
 
@@ -188,6 +197,127 @@ function meshhp(vertices,h;segments=nothing,markers=nothing,holes=nothing)
 end
 
 _boundary_segments(n) = reduce(hcat,[i,mod1(i+1,n)] for i in 1:n)
+
+
+
+"""
+
+    compute_dimension(p₁,p₂,p₃)
+    compute_dimension(p₁,p₂)   
+    compute_dimension(p₁)
+    compute_dimension(t::AbstractArray)
+
+Computes the dimension of the space ℓp₁p₂p₃. 
+"""
+compute_dimension(p₁, p₂, p₃) = sum(min(p₂, p₃ - j) + 1 for j = 0:p₁);
+compute_dimension(p₁, p₂) = compute_dimension(p₁, p₂, p₂)
+compute_dimension(p₁) = compute_dimension(p₁, p₁)
+compute_dimension(t::T) where {T<:AbstractArray} = compute_dimension(t...)
+
+"""
+    degrees_of_freedom_by_edge(mesh::HPMesh{F,I,P}) where {F<:AbstractFloat,I<:Integer,P<:Integer}
+
+Creates a dictionary (from `Dictionaries.jl`) where the keys are the edges of `mesh` and the values are vectors with indices corresponding to the nodal degrees of freedom. 
+"""
+function degrees_of_freedom_by_edge!(mesh::HPMesh{F,I,P}) where {F,I,P}
+    (;points,edgelist,dofs) = mesh 
+    by_edge  = dofs.by_edge
+    i        = size(points,2)+1
+    for edge in edges(edgelist)
+        med  = collect(i:i+degree(edgelist[edge])-2)
+        set!(by_edge,edge,[edge[1],med...,edge[2]])
+        i   += degree(edgelist[edge])-1
+    end
+end
+"""
+    degrees_of_freedom(mesh::HPMesh{F,I,P}) where {F,I,P}
+
+Creates a dictionary (from `Dictionaries.jl`) where the keys are the triangles of the mesh and the values are vectores storing the indices of the corresponding degrees of freedom. 
+
+Internally, `degrees_of_freedom_by_edge` is called in order to obtain the nodal degrees of freedom, and then the degrees of freedom corresponding to bubble functions are computed. 
+
+If a dictionary of degrees of freedom by edge has already been computed, it is recommended to run: 
+
+    degrees_of_freedom(mesh::HPMesh{F,I,P},by_edge::Dictionary{HPEdge{I},Vector{I}}) where {F,I,P}
+"""
+function degrees_of_freedom!(mesh::HPMesh{F,I,P}) where {F,I,P}
+    (;edgelist,trilist,dofs) = mesh
+    (;by_edge,by_tri) = dofs
+    if isempty(by_edge)
+        degrees_of_freedom_by_edge!(mesh)
+    end
+    k       = maximum(maximum.(by_edge))+1 #first non-edge dof
+    for t in triangles(trilist)
+        p,t_edges = pedges(t,mesh)
+        newdofs = zeros(I,compute_dimension(p))
+        set!(by_tri,t,newdofs)
+        j = 1 #counter of dof in current triangle
+        println(t_edges)
+        @inbounds for i in 1:3
+            println(t_edges[i])
+            println(by_edge[t_edges[i]])
+            newdof = by_edge[t_edges[i]]
+            if  same_order(t_edges[i],edgelist)
+                newdofs[j:j+length(newdof)-2] .= newdof[1:end-1]
+            else
+                newdofs[j:j+length(newdof)-2] .= reverse(newdof[2:end])
+            end 
+            j += length(newdof)-1
+        end
+        newdofs[j:end] = k:k+(length(newdofs)-j)
+        k += length(newdofs)-j + 1
+    end
+end
+
+
+"""
+    marked_dof(mesh::HPMesh{F,I,P},marker) where {F,I,P}
+
+Returs a list of indices corresponding to the degrees of freedom marked with `marker`. If a vector of markers is passed, it returs degrees of freedom marked with any of them. 
+
+Internally, `marked_dof` 
+"""
+function marked_dof(mesh::HPMesh{F,I,P},marker::N) where {F,I,P,N<:Integer}
+    marked_dof(mesh,[marker])
+end
+function marked_dof(mesh::HPMesh{F,I,P},marker) where {F,I,P}
+    (;dofs) = mesh
+    if isempty(dofs.by_edge)
+        degrees_of_freedom_by_edge!(mesh)
+    end
+    _marked_dof(mesh,marker)
+end
+function _marked_dof(mesh::HPMesh{F,I,P},markerslist::AbstractVector) where {F,I,P}
+    (;edgelist,dofs) = mesh
+    (;by_edge) = dofs
+    v = Vector{I}()
+    for e in edges(edgelist)
+        if marker(edgelist[e]) in markerslist
+            push!(v,by_edge[e]...)
+        end
+    end
+    return unique(v)
+end
+
+"""
+    boundary_dof(mesh::HPMesh{F,I,P}) where {F,I,P}
+
+Returns a list of the degrees of freedom lying at the boundary of the mesh.
+Internally, it calls `degrees_of_freedom_by_edge` in order to obtain the nodal degrees of freedom. If a dof by edge dictionary has already been computed, it is recommended to run: 
+
+    boundary_dof(mesh,by_edge) 
+"""
+function boudary_dof(mesh::HPMesh{F,I,P}) where {F,I,P}
+    by_edge = degrees_of_freedom_by_edge(mesh)
+    boundary_dof(mesh,by_edge)
+end
+function boundary_dof(mesh::HPMesh{F,I,P},by_edge) where {F,I,P}
+    marked_dof(mesh,by_edge,[1,2])
+end
+
+function dirichlet_dof(mesh::HPMesh{F,I,P}) where {F,I,P}
+    marked_dof(mesh,1)
+end
 
 """
     $(SIGNATURES)
