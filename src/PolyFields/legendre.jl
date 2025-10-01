@@ -19,12 +19,12 @@ struct LegendreIterator{I<:Integer,F<:Number,X}
 end
 LegendreIterator(N::I) where {I<:Integer} = LegendreIterator{I,Float64,:x}(N)
 Base.IteratorSize(::Type{<:LegendreIterator}) = Base.HasLength()
-Base.length(l::LegendreIterator{I,F,X}) where {I,F,X} = l.N
+Base.length(l::LegendreIterator{I,F,X}) where {I,F,X} = l.N+1
 
-function Base.iterate(l::LegendreIterator{I,F,X}) where {I,F,X}
-    q = ImmutablePolynomial((F(1)),X)
+function Base.iterate(::LegendreIterator{I,F,X}) where {I,F,X}
+    q = ImmutablePolynomial((F(1),),X)
     z = zero(q)
-    q,(1,q,z)
+    q,(0,q,z)
 end
 
 function Base.iterate(l::LegendreIterator{I,F,X},state) where {I,F,X}
@@ -37,11 +37,11 @@ end
 
 function _iterate(::LegendreIterator{I,F,X},state) where {I,F,X}
     n,p,pm = state
-    if n==1
+    if n==0
         q = ImmutablePolynomial((zero(F),one(F)),X)
-        return q,(2,q,p)
+        return q,(1,q,p)
     else
-        q = ((2n-1)ImmutablePolynomial((zero(F),one(F)),X)*p - (n-1)*pm)/n
+        q = ((2n+1)ImmutablePolynomial((zero(F),one(F)),X)*p - n*pm)/(n+1)
         return q,(n+1,q,p)
     end
 end
@@ -58,15 +58,15 @@ struct StandardBasis{P<:Integer,F<:Number,X,Y}
     function StandardBasis{P,F,X,Y}(p) where {P,F,X,Y}
         p = P.(p)
         p[1]+p[2] >= p[3] || throw(ArgumentError("Degrees does not satisfy p conformity."))
-        Lx = LegendreIterator{P,F,X}(p[2])
-        Ly = LegendreIterator{P,F,Y}(p[1])
+        Lx = LegendreIterator{P,F,X}(p[1])
+        Ly = LegendreIterator{P,F,Y}(p[2])
         new{P,F,X,Y}(p,Lx,Ly)
     end
 end
 StandardBasis(p::NTuple{3,P}) where P = StandardBasis{P,Float64,:x,:y}(p)
 StandardBasis(p₁::P,p₂::P,p₃::P) where P = StandardBasis((p₁,p₂,p₃))
 Base.IteratorSize(::Type{<:StandardBasis}) = Base.HasLength()
-Base.length(sb::StandardBasis) = sum(min(sb.p[2],sb.p[3]-j) for j in 0:sb.p[1]) +sb.p[1] + 1
+Base.length(sb::StandardBasis) = sum(min(sb.degs[2],sb.degs[3]-j) for j in 0:sb.degs[1]) +sb.degs[1] + 1
 
 function Base.iterate(sb::StandardBasis{P,F,X,Y}) where {P,F,X,Y}
     (;Lx,Ly) = sb
@@ -79,16 +79,23 @@ function Base.iterate(sb::StandardBasis{P,F,X,Y},state) where {P,F,X,Y}
     (;degs,Lx,Ly) = sb
     (p₁,p₂,p₃) = degs
     stx,sty = state
-    if (sty[1] == p₁) && (stx[1] == min(p₃-sty[1],p₂))
+    if (stx[1] == p₁) && (sty[1] == min(p₃-p₁,p₂))
         return nothing
-    elseif stx[1] < min(p₃-sty[1],p₂)
-        px,stxnew = iterate(Lx,stx)
-        return PolyScalarField(px,sty[2]),(stxnew,sty)
+    elseif sty[1] < min(p₃-stx[1],p₂)
+        return _iteratey(Ly,sty,stx)
     else
-        py,stynew = iterate(Ly,sty)
-        px,stxnew = iterate(Lx)
-        return PolyScalarField(px,py),(stxnew,stynew)
+        return _iteratex(Lx,Ly,stx)
     end
 end
 
+function _iteratex(Lx,Ly,stx)
+    py,stynew = iterate(Ly) 
+    px,stxnew = iterate(Lx,stx)
+    return PolyScalarField(px,py),(stxnew,stynew)
+end
+
+function _iteratey(Ly,sty,stx)
+    py,stynew = iterate(Ly,sty)
+    return PolyScalarField(stx[2],py),(stx,stynew)
+end
 
