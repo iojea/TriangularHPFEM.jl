@@ -4,6 +4,9 @@ abstract type PolyField <:Function end
 ###########################
 #     SCALAR FIELDS
 ###########################
+
+
+
 indeterminate(::AbstractPolynomial{T,X}) where {T,X} = X
 """
 ```
@@ -37,9 +40,11 @@ function PolyScalarField(t1::Tuple,t2::Tuple,X,Y)
     PolyScalarField{F,X,N,Y,M}(p1,p2)
 end
 PolyScalarField(t1::Tuple,t2::Tuple) =  PolyScalarField(t1,t2,:x,:y)
-
 (s::PolyScalarField)(x,y) = s.px(x)*s.py(y)
 (s::PolyScalarField)(x::T) where T<:AbstractVector = s.px(x[1])*s.py(x[2])
+
+
+indeterminates(p::PolyScalarField) = (indeterminate(p.px),indeterminate(p.py))
 
 Base.:*(a::Number,p::PolyScalarField) = PolyScalarField(a*p.px,p.py)
 
@@ -67,43 +72,19 @@ struct PolyVectorField{F,X,N1,N2,Y,M1,M2} <: PolyField
     s2::PolyScalarField{F,X,N2,Y,M2}
 end
 
+(v::PolyVectorField)(::Type{T},x,y) where T= T(v.s1(x,y),v.s2(x,y))
+(v::PolyVectorField)(x,y) = [v.s1(x,y),v.s2(x,y)]
+(v::PolyVectorField)(x::T) where T<:AbstractVector = v(T,x[1],x[2])
 
-struct OperationField{F<:Function,F1<:Function,F2<:Function} <:Function
-    op::F
-    args::Tuple{F1,F2}
+indeterminates(v::PolyVectorField) = indeterminates(v.s1)
+
+function Base.:*(p::PolyScalarField,v::PolyVectorField)
+    issubset(indeterminates(p),indeterminates(v)) || throw(ArgumentError("Fields have different indeterminates"))
+    PolyVectorField(p*v.s1,p*v.s2)
 end
-(of::OperationField)(x) = of.F(of.args1(x),of.args2(x))
-
-function (v::PolyVectorField)(x::T) where T<:AbstractVector
-    T(v.s1(x),v.s2(x))
+function Base.:*(p::AbstractPolynomial,v::PolyVectorField)
+    indeterminate(p) in indeterminates(v) || throw(ArgumentError("Indeterminates does not match."))
+    PolyVectorField(p*v.s1,p*v.s2)    
 end
-
-struct OperationField{F<:Function,F1<:Function,F2<:Function} <:Function
-    op::F
-    args::Tuple{F1,F2}
-end
-(of::OperationField)(x) = of.F(of.args1(x),of.args2(x))
-
-
-
-
-function Polynomials.:derivative(p::PolyScalarField{F,X,N,Y,M},z::Symbol) where {F,X,N,Y,M}
-    z == X && return PolyScalarField(derivative(p.px),p.py)
-    z == Y && return PolyScalarField(p.px,derivative(p.py))
-    throw(ArgumentError("Z must be an indeterminate present in the field, but Z=$z was provided for a field with indeterminates X=$X and Y=$Y"))
-end
-
-function gradient(p::PolyScalarField{F,X,N,Y,M}) where {F,X,N,Y,M}
-    dx = derivative(p,X)
-    dy = derivative(p,Y)
-    PolyVectorField(dx,dy)
-end
-
-function div(v::PolyVectorField)
-    d1x = derivative(v.s1.px)
-    d2y = derivative(v.s2.py)
-    part1 = PolyScalarField(d1x,v.s1.py)
-    part2 = PolyScalarField(v.s2.px,d2y)
-    OperationField(+,(part1,part2))
-end
+Base.:*(a::Number,v::PolyVectorField) = PolyVectorField(a*v.s1,a*v.s2)
 

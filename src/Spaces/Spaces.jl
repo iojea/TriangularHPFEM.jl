@@ -10,9 +10,9 @@ using TriangularhpFEM.Quadratures
 include("basis.jl")
 include("hpspaces.jl")
 
-export BasisIterator,StdScalarSpace,GradientSpace
+#export BasisIterator,StdScalarSpace,GradientSpace
 export Integrand
-export gradient,∇
-export get_space,get_spaces
+#export gradient,∇
+#export get_space,get_spaces
 
 end; #module

@@ -12,10 +12,9 @@ using TriangularhpFEM.Meshes
 include("auxiliarydata.jl")
 include("refelement.jl")
 include("gmquads.jl")
-include("dofs.jl")
 include("measures.jl")
 
-export QScheme, Measure, AuxDegData,DOFs
+export QScheme, Measure, AuxDegData
 export gmquadrature
 
 
