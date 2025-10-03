@@ -25,6 +25,8 @@ end
 @publish Meshes plothpmesh
 @publish Meshes animate_refinement
 
+@publish PolyFields BivariatePolynomial
+@publish PolyFields TensorPolynomial
 @publish PolyFields PolyScalarField
 @publish PolyFields PolyVectorField
 @publish PolyFields OperationField
