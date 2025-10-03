@@ -3,6 +3,7 @@ module PolyFields
 using Polynomials
 using LinearAlgebra
 
+include("poly2d.jl")
 include("fields.jl")
 include("opfields.jl")
 include("legendre.jl")
@@ -12,6 +13,7 @@ include("integration.jl")
 const Δ = laplacian    
 const ∇ = gradient
 
+export BivariatePolynomial,TensorPolynomial
 export PolyScalarField, PolyVectorField
 export OperationField
 export LegendreIterator,StandardBasis
