@@ -1,7 +1,7 @@
 
-abstract type FieldsType end
-struct PolyType <: FieldsType end
-struct GeneralType <:FieldsType end
+abstract type FieldType end
+struct PolyType <: FieldType end
+struct GeneralType <:FieldType end
 
 struct OperationField{F<:Function,F1,F2}
     op::F
@@ -11,18 +11,21 @@ end
 arguments(of::OperationField) = of.args
 operation(of::OperationField) = of.op
 
-(of::OperationField)(x) = operation(of)((f(x) for f in arguments(of))...)
-
-FieldsType(::PolyField) = PolyType()
+(of::OperationField)(x,y) = operation(of)((f(x,y) for f in arguments(of))...)
+(of::OperationField)(x) = of(x[1],x[2]
+                             )
+FieldType(::PolyField) = PolyType()
 Base.promote_type(::PolyType,::PolyType) = PolyType()
 Base.promote_type(::PolyType,::GeneralType) = GeneralType()
 Base.promote_type(::GeneralType,::PolyType) = GeneralType()
 Base.promote_type(::GeneralType,::GeneralType) = GeneralType()
-FieldsType(::A,::B) where {A,B} = promote_type(A,B)
-FieldsType(op::OperationField) = promote_type(FieldsType.(op.args)...)
+FieldType(::A,::B) where {A,B} = promote_type(A,B)
+FieldType(op::OperationField) = promote_type(FieldType.(op.args)...)
 
-Base.:+(p::P,q::P) where {P<:PolyField} = OperationField(+,(p,q))
-Base.:-(p::P,q::P) where {P<:PolyField} = OperationField(-,(p,q))
+for op in (:+,:-,:*)
+    expr = Meta.parse("(Base.:$op)(p::Function,q::Function) = OperationField($op,(p,q))")
+    eval(expr)
+end
 
 function Base.:*(A::T,u::PolyVectorField) where {T<:AbstractMatrix}
     println(size(A))

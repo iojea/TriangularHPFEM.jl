@@ -1,16 +1,56 @@
-abstract type PolyField <:Function end
+abstract type PolyField{F,X,Y} <:Function end
 
-
-###########################
-#     SCALAR FIELDS
-###########################
-
-
-
+###########################################################################
+#################              SCALAR FIELDS              #################
+###########################################################################
+#
+abstract type PolyScalarField{F,X,N,Y,M} <: PolyField{F,X,Y} end
 indeterminate(::AbstractPolynomial{T,X}) where {T,X} = X
+indeterminates(::PolyField{F,X,Y}) where {F,X,Y} = (X,Y)
+# 
+######################################
+####      BivariatePolynomial     ####
+######################################
+
+_zerofill(t::NTuple{K,T},N) where {K,T} = K>=N ? t : (t...,zeros(T,N-K)...)
+
 """
 ```
-    julia> ϕ = PolyScalarField((2,1.,3.),(3.,2.))
+    BivariatePolynomial(t::Tuple)
+```
+Creates a bivariate polynomial with the coefficients stored in  `t`. `t` should be a tuple of tuples. Each sub-tuple defines a polynomial on the variable `x`. This polynomials are the coefficients of a polynomial on `y`, thus forming a bivariate polynomial.
+
+""" 
+struct BivariatePolynomial{F,X,N,Y,M} <: PolyScalarField{F,X,N,Y,M}
+    p::ImmutablePolynomial{ImmutablePolynomial{F,X,N},Y,M}
+end
+function BivariatePolynomial{X,Y}(t::Tuple) where {X,Y}
+        all(typeof(u)<:Tuple for u in t) || throw(ArgumentError("A tuple of tuples is expected"))
+        N = maximum(length.(t))
+        M = length(t)
+        t = Tuple(promote(u...) for u in t)
+        F = promote_type(eltype.(t)...)
+        q = Tuple(ImmutablePolynomial(_zerofill(F.(u),N),:x) for u in t)
+        p = ImmutablePolynomial(q,:y)
+        BivariatePolynomial{F,X,N,Y,M}(p)
+end
+BivariatePolynomial(t::Tuple) = BivariatePolynomial{:x,:y}(t)
+
+(p::BivariatePolynomial)(x,y) = p.p(y)(x)
+(p::BivariatePolynomial)(x::AbstractVector) = p(x...)
+
+
+for op in (:+,:-,:*)
+    expr = Meta.parse("(Base.:$op)(p::BivariatePolynomial,q::BivariatePolynomial) = BivariatePolynomial($op(p.p,q.p))")
+    eval(expr)
+end
+
+######################################
+####      TensorPolynomial     ####
+######################################
+"""
+```
+    julia> ϕ = TensorPolynomial((2,1.,3.),(3.,2.))
     julia> ϕ(1,-1)
         6.0
     julia> ϕ([1,-1])
@@ -20,16 +60,16 @@ Defines a scalar field `ϕ:ℝ²→ℝ` given by a product of a polynomial in `x
 
 The indeterminates can be specified:
 ```
-    julia> ϕ= PolyScalarField((2,1.,3.),(3.,2.),:z,:ξ)
+    julia> ϕ = TensorPolynomial((2,1.,3.),(3.,2.),:z,:ξ)
 ```
 produces the same polynomials, but on the variables `(z,ξ)`. 
 """
-struct PolyScalarField{F,X,N,Y,M} <: PolyField
+struct TensorPolynomial{F,X,N,Y,M} <: PolyScalarField{F,X,N,Y,M}
     px::ImmutablePolynomial{F,X,N}
     py::ImmutablePolynomial{F,Y,M}
 end
 
-function PolyScalarField(t1::Tuple,t2::Tuple,X,Y)
+function TensorPolynomial(t1::Tuple,t2::Tuple,X,Y)
     t1 = promote(t1...)
     t2 = promote(t2...)
     F = promote_type(eltype(t1),eltype(t2))
@@ -37,46 +77,66 @@ function PolyScalarField(t1::Tuple,t2::Tuple,X,Y)
     M = length(t2)
     p1 = ImmutablePolynomial(NTuple{N,F}(convert.(F,t1)),X)
     p2 = ImmutablePolynomial(NTuple{M,F}(convert.(F,t2)),Y)
-    PolyScalarField{F,X,N,Y,M}(p1,p2)
+    TensorPolynomial{F,X,N,Y,M}(p1,p2)
 end
-PolyScalarField(t1::Tuple,t2::Tuple) =  PolyScalarField(t1,t2,:x,:y)
-(s::PolyScalarField)(x,y) = s.px(x)*s.py(y)
-(s::PolyScalarField)(x::T) where T<:AbstractVector = s.px(x[1])*s.py(x[2])
+TensorPolynomial(t1::Tuple,t2::Tuple) =  TensorPolynomial(t1,t2,:x,:y)
+(s::TensorPolynomial)(x,y) = s.px(x)*s.py(y)
+(s::TensorPolynomial)(x::T) where T<:AbstractVector = s.px(x[1])*s.py(x[2])
 
 
-indeterminates(p::PolyScalarField) = (indeterminate(p.px),indeterminate(p.py))
 
-Base.:*(a::Number,p::PolyScalarField) = PolyScalarField(a*p.px,p.py)
+Base.:*(a::Number,p::TensorPolynomial) = TensorPolynomial(a*p.px,p.py)
 
-function Base.:*(p::AbstractPolynomial,q::PolyScalarField)
+function Base.:*(p::AbstractPolynomial,q::TensorPolynomial)
     if indeterminate(p)===indeterminate(q.px)
-        PolyScalarField(p*q.px,q.py)
+        TensorPolynomial(p*q.px,q.py)
     elseif indeterminate(p)===indeterminate(q.py)
-        PolyScalarField(q.px,p*q.py)
+        TensorPolynomial(q.px,p*q.py)
     else
-        throw(ArgumentError("Indeterminates does not match. Polynomial p has indeterminate $(indeterminate(p)), whereas PolyScalarField q has indeterminates $(indeterminate(q.px)),$(indeterminate(q.py))."))
+        throw(ArgumentError("Indeterminates does not match. Polynomial p has indeterminate $(indeterminate(p)), whereas TensorPolynomial q has indeterminates $(indeterminate(q.px)),$(indeterminate(q.py))."))
     end
 end
-Base.:*(q::PolyScalarField,p::AbstractPolynomial) = p*q
+Base.:*(q::TensorPolynomial,p::AbstractPolynomial) = p*q
 
-function Base.:*(p::P,q::Q) where {P<:PolyScalarField,Q<:PolyScalarField}
-    PolyScalarField(p.px*q.px,p.py*q.py)
+function Base.:*(p::P,q::Q) where {P<:TensorPolynomial,Q<:TensorPolynomial}
+    TensorPolynomial(p.px*q.px,p.py*q.py)
+end
+
+
+function Base.convert(BivariatePolynomial,p::TensorPolynomial{F,X,N,Y,M}) where {F,X,N,Y,M}
+    cx = [p.px.coeffs...]
+    cy = p.py.coeffs
+    t = Tuple(Tuple(c*cx) for c in cy)
+    BivariatePolynomial(t)
+end
+
+Base.promote(p::BivariatePolynomial,q::TensorPolynomial) = (p,convert(BivariatePolynomial,q))
+Base.promote(q::TensorPolynomial,p::BivariatePolynomial) = promote(p,q)
+
+
+for op in (:+,:-,:*)
+    expr = Meta.parse("(Base.:$op)(p::BivariatePolynomial,q::TensorPolynomial) = $op(p,convert(BivariatePolynomial,q))")
+    eval(expr)
+    expr = Meta.parse("(Base.:$op)(q::TensorPolynomial,p::BivariatePolynomial) = $op(p,q)")
+    eval(expr)
+end
+for op in (:+,:-)
+    expr = Meta.parse("(Base.:$op)(p::TensorPolynomial,q::TensorPolynomial) = $op(convert(BivariatePolynomial,p),convert(BivariatePolynomial,q))")
+    eval(expr)
 end
 
 
 ###############################
 #       VECTOR FIELDS
 ###############################
-struct PolyVectorField{F,X,N1,N2,Y,M1,M2} <: PolyField
+struct PolyVectorField{F,X,N1,N2,Y,M1,M2} <: PolyField{F,X,Y}
     s1::PolyScalarField{F,X,N1,Y,M1}
     s2::PolyScalarField{F,X,N2,Y,M2}
 end
 
-(v::PolyVectorField)(::Type{T},x,y) where T= T(v.s1(x,y),v.s2(x,y))
-(v::PolyVectorField)(x,y) = [v.s1(x,y),v.s2(x,y)]
-(v::PolyVectorField)(x::T) where T<:AbstractVector = v(T,x[1],x[2])
+(v::PolyVectorField)(x,y) = HPPoint(v.s1(x,y),v.s2(x,y))
+(v::PolyVectorField)(x) = v(x[1],x[2])
 
-indeterminates(v::PolyVectorField) = indeterminates(v.s1)
 
 function Base.:*(p::PolyScalarField,v::PolyVectorField)
     issubset(indeterminates(p),indeterminates(v)) || throw(ArgumentError("Fields have different indeterminates"))

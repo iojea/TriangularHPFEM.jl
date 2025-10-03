@@ -13,6 +13,8 @@ macro publish(mod,name)
   end
 end
 
+
+
 @publish Meshes HPPoint
 @publish Meshes HPEdge
 @publish Meshes HPTriangle
@@ -25,9 +27,12 @@ end
 @publish Meshes plothpmesh
 @publish Meshes animate_refinement
 
-@publish PolyFields PolyScalarField
+@publish PolyFields BivariatePolynomial
+@publish PolyFields TensorPolynomial
 @publish PolyFields PolyVectorField
 @publish PolyFields OperationField
+@publish PolyFields FieldType
+@publish PolyFields derivative
 @publish PolyFields gradient
 @publish PolyFields divergence
 @publish PolyFields ∇
@@ -36,6 +41,7 @@ end
 @publish PolyFields ref_integrate
 @publish PolyFields LegendreIterator
 @publish PolyFields StandardBasis
+@publish PolyFields show
 end;
 
 #@publish Quadratures QScheme
