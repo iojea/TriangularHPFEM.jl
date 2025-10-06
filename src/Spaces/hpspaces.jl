@@ -8,12 +8,6 @@ abstract type TensorHPSpace <: AbstractHPSpace end
 
 struct StdScalarSpace <: ScalarHPSpace end
 
-struct GradientSpace <: VectorHPSpace end
-
-gradient(::StdScalarSpace) = GradientSpace()
-
-const ∇ = gradient
-
 
 struct TestSpace{T<:AbstractHPSpace} <: AbstractHPSpace
     space::T
@@ -25,9 +19,9 @@ struct TrialSpace{T<:AbstractHPSpace,F<:Function} <:AbstractHPSpace
 end
 
 
-struct OperationField{F<:Function,T<:Tuple}
+struct OperatorSpace{F<:Function,S<:AbstractHPSpace}
     op::F
-    args::T
+    space::S
 end
 
 LinearAlgebra.:⋅(a::VectorHPSpace,b::VectorHPSpace) = OperationField(⋅,(a,b))
@@ -46,8 +40,9 @@ struct Constant <: CoeffType end
 struct Variable <: CoeffType end
 
 # Sintactic sugar
-struct Integrand
-    func
+struct Integrand{F<:Function,F1,F2}
+    op::F
+    args::Tuple{F1,F2}
 end
 const ∫ = Integrand
 

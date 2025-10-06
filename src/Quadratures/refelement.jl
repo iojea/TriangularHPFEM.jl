@@ -18,5 +18,5 @@ end
 end
 
 
-const T̂ = ReferenceElement(SMatrix{2,3,Float64}([-1 -1;1 -1;-1 1]),2.)
+const Τ = ReferenceElement(SMatrix{2,3,Float64}([-1 -1;1 -1;-1 1]),2.)
 

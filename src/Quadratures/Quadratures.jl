@@ -6,17 +6,19 @@ module Quadratures
 using LinearAlgebra
 using StaticArrays
 using Dictionaries
-using HyperDualNumbers
-using TriangularhpFEM.Meshes
+using ..Meshes
+using ..PolyFields
 
 include("auxiliarydata.jl")
 include("refelement.jl")
 include("gmquads.jl")
 include("measures.jl")
+include("integration.jl")
 
 export QScheme, Measure, AuxDegData
 export gmquadrature
-
+export integrate
+export ref_integrate
 
 end; #module
 

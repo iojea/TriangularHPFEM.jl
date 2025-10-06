@@ -47,27 +47,26 @@ function gmquadrature(::Val{D},degree::P,Tref) where {D,P<:Integer}
     L = numberofpoints(degree,D)
     _gmquadrature(T,Val(D),Val(L),degree,Tref)
 end
+function gmquadrature(d::Val{D},degree::P) where {D,P}
+    Tref = @SMatrix[-1. 1 1;-1. -1. 1]
+    gmquadrature(d,degree,Tref)
+end
 
 
 _szero(::Val{D},::Type{T}) where {D,T} = MVector{D,T}(zero(T) for _ in 1:D)
 _sszero(::Val{D},::Val{L},::Type{T}) where {D,L,T} = [_szero(Val(D),T) for _ in 1:L]
 
-function _gmquadrature(::Type{T}, ::Val{D}, ::Val{L}, degree::Int,Tref) where {T,D,L}
+function _gmquadrature(::Type{T}, ::Val{D}, ::Val{L}, degree::P,Tref) where {T,D,L,P}
     D::Int
     @assert degree ≥ 0
     @assert isodd(degree)
-
     N = D + 1
-
     order = (degree - 1) ÷ 2
-    
     exponents = get_all_exponents(Val(N), order)
-    
     weights = zeros(T,L)
     points = _sszero(Val(D),Val(L),T)
 
     j = 1
-    
     for i in 0:order
         w = T((-1)^i) * big(degree + D - 2 * i)^degree / (big(2)^(2 * order) *
              factorial(big(i)) *
@@ -79,8 +78,7 @@ function _gmquadrature(::Type{T}, ::Val{D}, ::Val{L}, degree::Int,Tref) where {T
         end
     end
     weights /= sum(weights)
-
-    return QScheme{D,T}(D, weights, points, degree)
+    return QScheme{D,T,P}(D, weights, points, degree)
 end
 
 """
@@ -137,45 +135,6 @@ function augment(exponents::Vector{SVector{D,Int}}) where {D}
     return out
 end
 
-
-"""
-    integrate(fun, scheme)
-    integrate(fun, scheme, vertices::AbstractVector)
-    integrate(fun, scheme, vertices::AbstractMatrix)
-
-# Arguments
-- `fun`: integrand, should accept an `SVector` as argument
-- `scheme`: quadrature scheme
-- `vertices`: vertices of the simplex
-
-The vertices need to be passed either as a vector-of-vectors or as a
-matrix. In the first case, there need to be `D+1` points with `D`
-coordinates each. In the second case, the matrix needs to have size
-`D`×`D+1`.
-
-If the vertices are omitted, the function is called with barycentric
-coordinates instead.
-"""
-
-@inbounds function integrate(fun, scheme::QScheme{N,T}) where {N,T}
-    @assert N > 0
-
-    ws = scheme.weights
-    ps = scheme.points
-    @assert length(ws) == length(ps)
-
-    p1 = ps[1]
-    R = typeof(ws[1] * fun(p1))
-
-    s = zero(R)
-    @simd for i in 1:length(ws)
-        w = ws[i]
-        p = ps[i]
-        s += w * fun(p)
-    end
-
-    return s / factorial(N - 1)
-end
 
 
 # @inbounds function hatmass(p,Tref::ReferenceElement{D,N,F},C) where {D,N,F}
@@ -236,64 +195,4 @@ end
 # end;
 
 
-
-@inbounds function integrate(fun, scheme::QScheme{N,T},
-                             vertices::SMatrix{D,N,U}) where {N,T,D,U}
-    @assert N > 0
-    @assert N >= D + 1
-
-    ws = scheme.weights
-    ps = scheme.points
-    @assert length(ws) == length(ps)
-
-    p1 = ps[1]
-    x1 = (vertices * p1)::SVector{D}
-    X = typeof(x1)
-    R = typeof(ws[1] * fun(x1))
-
-    s = zero(R)
-    @simd for i in 1:length(ws)
-        w = ws[i]
-        p = ps[i]
-        x = vertices * p
-        s += w * fun(x)
-    end
-
-    # If `U` is an integer type, then Linearalgebra.det converts to
-    # floating-point values; we might want a different type
-    vol = R(calc_vol(vertices)) / factorial(N - 1)
-    return vol * s
-end
-function integrate(fun, scheme::QScheme, vertices::SMatrix)
-    return error("Wrong dimension for vertices matrix")
-end
-@inbounds function integrate(fun, scheme::QScheme{N,T},
-                             vertices::SVector{N,SVector{D,U}}) where {N,T,D,U}
-    return integrate(fun, scheme,
-                     SMatrix{D,N,U}(vertices[n][d] for d in 1:D, n in 1:N))
-end
-function integrate(fun, scheme, vertices::SVector{N,<:SVector}) where {N}
-    return error("Wrong dimension for vertices array")
-end
-function integrate(kernel, scheme::QScheme{N},
-                   vertices::AbstractVector) where {N}
-    @assert length(vertices) == N
-    @assert N > 0
-    D = length(vertices[1])
-    @assert N >= D + 1
-    vertices′ = SVector{N}(map(SVector{D}, vertices))
-    return integrate(kernel, scheme, vertices′)
-end
-function integrate(kernel, scheme::QScheme{N},
-                   vertices::AbstractMatrix) where {N}
-    @assert size(vertices, 1) == N
-    @assert N > 0
-    D = size(vertices, 2)
-    @assert N >= D + 1
-    vertices′ = SMatrix{N,D}(vertices)'
-    return integrate(kernel, scheme, vertices′)
-end
-
-
-################################################################################
 

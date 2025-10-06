@@ -1,4 +1,4 @@
-struct OperationField{F<:Function,F1,F2}
+struct OperationField{F<:Function,F1,F2} <: Function
     op::F
     args::Tuple{F1,F2}
 end

@@ -20,9 +20,10 @@ function Measure(mesh::HPMesh{F,P,I}) where {F,P,I}
     end
     schs = Vector{QScheme{2,F,P}}()
     for i in round.(P,range(minim,maxim,length=n))
-        sch = gmquadrature(Val(2),P(2i+1),T̂)
+        sch = gmquadrature(Val(2),P(2i+1))
         push!(schs,sch)
     end
+    push!(schs,gmquadrature(Val(2),P(35)))
     Measure(mesh,aux,schs)
 end
 

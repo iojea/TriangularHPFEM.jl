@@ -3,9 +3,9 @@ module TriangularhpFEM
 #using DocStrigExtensions
 
 include("Meshes/Meshes.jl")
-#include("Quadratures/Quadratures.jl")
-#include("Spaces/Spaces.jl")
 include("PolyFields/PolyFields.jl")
+include("Quadratures/Quadratures.jl")
+#include("Spaces/Spaces.jl")
 
 macro publish(mod,name)
   quote
@@ -27,6 +27,7 @@ end
 @publish Meshes plothpmesh
 @publish Meshes animate_refinement
 
+
 @publish PolyFields BivariatePolynomial
 @publish PolyFields TensorPolynomial
 @publish PolyFields PolyVectorField
@@ -37,22 +38,21 @@ end
 @publish PolyFields ∇
 @publish PolyFields dot
 @publish PolyFields laplacian
-@publish PolyFields ref_integrate
 @publish PolyFields LegendreIterator
 @publish PolyFields StandardBasis
 @publish PolyFields show
+
+@publish Quadratures QScheme
+@publish Quadratures gmquadrature
+@publish Quadratures compute_dimension
+@publish Quadratures boundary_nodes
+@publish Quadratures matrix_F
+@publish Quadratures matrix_C
+@publish Quadratures degs
+@publish Quadratures integrate
+@publish Quadratures ref_integrate
+
 end;
-
-#@publish Quadratures QScheme
-#@publish Quadratures gmquadrature
-#@publish Quadratures hatmass
-#@publish Quadratures hatstiff
-#@publish Quadratures compute_dimension
-#@publish Quadratures boundary_nodes
-#@publish Quadratures matrix_F
-#@publish Quadratures matrix_C
-#@publish Quadratures degs
-
 
 #@publish Spaces BasisIterator
 #@publish Spaces StdScalarSpace

@@ -72,7 +72,7 @@ function Base.iterate(sb::StandardBasis{P,F,X,Y}) where {P,F,X,Y}
     (;Lx,Ly) = sb
     px,stx = iterate(Lx)
     py,sty = iterate(Ly)
-    PolyScalarField(px,py),(stx,sty)
+    TensorPolynomial(px,py),(stx,sty)
 end
 
 function Base.iterate(sb::StandardBasis{P,F,X,Y},state) where {P,F,X,Y}
@@ -91,11 +91,11 @@ end
 function _iteratex(Lx,Ly,stx)
     py,stynew = iterate(Ly) 
     px,stxnew = iterate(Lx,stx)
-    return PolyScalarField(px,py),(stxnew,stynew)
+    return TensorPolynomial(px,py),(stxnew,stynew)
 end
 
 function _iteratey(Ly,sty,stx)
     py,stynew = iterate(Ly,sty)
-    return PolyScalarField(stx[2],py),(stx,stynew)
+    return TensorPolynomial(stx[2],py),(stx,stynew)
 end
 
