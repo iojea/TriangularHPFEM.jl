@@ -31,7 +31,6 @@ end
 @publish PolyFields TensorPolynomial
 @publish PolyFields PolyVectorField
 @publish PolyFields OperationField
-@publish PolyFields FieldType
 @publish PolyFields derivative
 @publish PolyFields gradient
 @publish PolyFields divergence

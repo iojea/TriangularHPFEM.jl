@@ -16,7 +16,6 @@ const ∇ = gradient
 
 export BivariatePolynomial,TensorPolynomial
 export PolyScalarField, PolyVectorField
-export FieldType
 export OperationField
 export LegendreIterator,StandardBasis
 export derivative,divergence,laplacian,gradient,∇,Δ

@@ -43,7 +43,10 @@ BivariatePolynomial(t::Tuple) = BivariatePolynomial{:x,:y}(t)
 for op in (:+,:-,:*)
     expr = Meta.parse("(Base.:$op)(p::BivariatePolynomial,q::BivariatePolynomial) = BivariatePolynomial($op(p.p,q.p))")
     eval(expr)
+    expr = Meta.parse("(Base.:$op)(a::Number,q::BivariatePolynomial) = BivariatePolynomial($op(a,q.p))")
+    eval(expr)
 end
+
 
 ######################################
 ####      TensorPolynomial     ####
@@ -98,7 +101,7 @@ function Base.:*(p::AbstractPolynomial,q::TensorPolynomial)
 end
 Base.:*(q::TensorPolynomial,p::AbstractPolynomial) = p*q
 
-function Base.:*(p::P,q::Q) where {P<:TensorPolynomial,Q<:TensorPolynomial}
+function Base.:*(p::TensorPolynomial{F,X,N,Y,M},q::TensorPolynomial{F,X,K,Y,L}) where {F,X,N,Y,M,K,L}
     TensorPolynomial(p.px*q.px,p.py*q.py)
 end
 
@@ -109,9 +112,9 @@ function Base.convert(BivariatePolynomial,p::TensorPolynomial{F,X,N,Y,M}) where 
     t = Tuple(Tuple(c*cx) for c in cy)
     BivariatePolynomial(t)
 end
-
-Base.promote(p::BivariatePolynomial,q::TensorPolynomial) = (p,convert(BivariatePolynomial,q))
-Base.promote(q::TensorPolynomial,p::BivariatePolynomial) = promote(p,q)
+BivariatePolynomial(p::TensorPolynomial) = convert(BivariatePolynomial,p)
+Base.promote(p::BivariatePolynomial,q::TensorPolynomial) = (p,BivariatePolynomial(q))
+Base.promote(q::TensorPolynomial,p::BivariatePolynomial) = (BivariatePolynomial(q),p)
 
 
 for op in (:+,:-,:*)
@@ -137,14 +140,47 @@ end
 (v::PolyVectorField)(x,y) = HPPoint(v.s1(x,y),v.s2(x,y))
 (v::PolyVectorField)(x) = v(x[1],x[2])
 
+Base.IteratorSize(::PolyVectorField) = HasLength()
+Base.length(::PolyVectorField) = 2
+get_x(p::PolyVectorField) = p.s1
+get_y(p::PolyVectorField) = p.s2
+function Base.getindex(p::PolyVectorField,i)
+    if i == 1
+        return get_x(p)
+    elseif i == 2
+        return get_y(p)
+    else
+        throw(ArgumentError("Index out of range. PolyVectorField has only 2 components."))
+    end
+end
 
 function Base.:*(p::PolyScalarField,v::PolyVectorField)
     issubset(indeterminates(p),indeterminates(v)) || throw(ArgumentError("Fields have different indeterminates"))
-    PolyVectorField(p*v.s1,p*v.s2)
+    PolyVectorField(p*v[1],p*v[2])
 end
 function Base.:*(p::AbstractPolynomial,v::PolyVectorField)
     indeterminate(p) in indeterminates(v) || throw(ArgumentError("Indeterminates does not match."))
-    PolyVectorField(p*v.s1,p*v.s2)    
+    PolyVectorField(p*v[1],p*v[2])    
 end
-Base.:*(a::Number,v::PolyVectorField) = PolyVectorField(a*v.s1,a*v.s2)
+Base.:*(a::Number,v::PolyVectorField) = PolyVectorField(a*v[1],a*v[2])
+function Base.:*(w::AbstractMatrix,v::PolyVectorField)
+    size(w) == (2,1) && return _vector_polyvector(w,v)
+    size(w) == (2,2) && return _matrix_polyvector(w,v)
+    throw(ArgumentError("It is only possible to multiply by a matrix of 2×2 or 2⨯1. For vector-vector field multiplication, check ⋅."))
+end
+
+_vector_polyvector(w,v) = w[1]*v[1] + w[2]*v[2]
+_matrix_polyvector(w,v) = PolyVectorField(w[1,1]*v[1]+w[1,2]*v[2],w[2,1]*v[1]+w[2,2]*v[2])
+
+function LinearAlgebra.dot(w::AbstractVector,v::PolyVectorField)
+    length(w)!=2 && throw(ArgumentError("Vector must have length 2."))
+    _vector_polyvector(w,v)
+end
+LinearAlgebra.dot(v::PolyVectorField,w::AbstractVector) = w⋅v
+
+function Base.:*(w::AbstractVector,p::PolyField)
+     length(w)!=2 && throw(ArgumentError("Vector must have length 2."))
+     PolyVectorField(w[1]*p,w[2]*p)
+end
+Base.:*(p::PolyField,w::AbstractVector) = w*p
 
