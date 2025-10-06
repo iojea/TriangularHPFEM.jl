@@ -35,6 +35,9 @@ function BivariatePolynomial{X,Y}(t::Tuple) where {X,Y}
         BivariatePolynomial{F,X,N,Y,M}(p)
 end
 BivariatePolynomial(t::Tuple) = BivariatePolynomial{:x,:y}(t)
+function BivariatePolynomial(r::ImmutablePolynomial{ImmutablePolynomial{F,X},Y,M}) where {F,X,Y,M}
+    BivariatePolynomial(Tuple(z.coeffs for z in r.coeffs))
+end
 
 (p::BivariatePolynomial)(x,y) = p.p(y)(x)
 (p::BivariatePolynomial)(x::AbstractVector) = p(x...)
