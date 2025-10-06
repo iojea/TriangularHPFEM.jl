@@ -14,6 +14,7 @@ Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
 
 [compat]
@@ -27,6 +28,7 @@ Markdown = "1.11.0"
 Polynomials = "4.0.21"
 Printf = "1.11.0"
 StaticArrays = "1.9.13"
+Test = "1.11.0"
 Triangulate = "2.4.0"
 julia = "1.6.7"
 

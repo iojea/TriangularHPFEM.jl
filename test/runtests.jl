@@ -2,5 +2,5 @@ using TriangularhpFEM
 using Test
 
 @testset "TriangularhpFEM.jl" begin
-    include("")
+    @testset "PolyFields" include("PolyFieldsTests/runtests.jl")
 end
