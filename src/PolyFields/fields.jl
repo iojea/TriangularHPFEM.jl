@@ -40,13 +40,14 @@ BivariatePolynomial(t::Tuple) = BivariatePolynomial{:x,:y}(t)
 (p::BivariatePolynomial)(x::AbstractVector) = p(x...)
 
 
-for op in (:+,:-,:*)
+for op in (:-,:*)
     expr = Meta.parse("(Base.:$op)(p::BivariatePolynomial,q::BivariatePolynomial) = BivariatePolynomial($op(p.p,q.p))")
     eval(expr)
     expr = Meta.parse("(Base.:$op)(a::Number,q::BivariatePolynomial) = BivariatePolynomial($op(a,q.p))")
     eval(expr)
 end
 
+Base.:+(p::BivariatePolynomial,q::BivariatePolynomial) = BivariatePolynomial(p.p + q.p)
 
 ######################################
 ####      TensorPolynomial     ####
