@@ -26,8 +26,7 @@ end
 
 LinearAlgebra.:⋅(a::VectorHPSpace,b::VectorHPSpace) = OperationField(⋅,(a,b))
 Base.:*(a::ScalarHPSpace,b::AbstractHPSpace) = OperationField(*,(a,b))
-Base.:*(m::Array,a::VectorHPSpace) = OperationField(*,(m,a))
-Base.:*(f::Function,a::VectorHPSpace) = OperationField(*,(f,a))
+Base.:*(m::Array,a::VectorHPSpace) = OperationField(*,(m,a))Base.:*(f::Function,a::VectorHPSpace) = OperationField(*,(f,a))
 
 
 
@@ -38,6 +37,13 @@ abstract type CoeffType end
 
 struct Constant <: CoeffType end
 struct Variable <: CoeffType end
+
+coefftype(::AbstractHPSpace) = Constant()
+coefftype(::AbstractArray) = Constant()
+coefftype(::Number) = Constant()
+
+coefftype(::Function) = Variable()
+coefftype(p::PolyField) = degree(p)==0 ? Constant() : Variable()
 
 # Sintactic sugar
 struct Integrand{F<:Function,F1,F2}
