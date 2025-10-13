@@ -9,14 +9,14 @@ abstract type TensorHPSpace <: AbstractHPSpace end
 struct StdScalarSpace <: ScalarHPSpace end
 
 
-struct TestSpace{T<:AbstractHPSpace} <: AbstractHPSpace
-    space::T
-end
+# struct TestSpace{T<:AbstractHPSpace} <: AbstractHPSpace
+#     space::T
+# end
 
-struct TrialSpace{T<:AbstractHPSpace,F<:Function} <:AbstractHPSpace
-    space::T
-    g::F
-end
+# struct TrialSpace{T<:AbstractHPSpace,F<:Function} <:AbstractHPSpace
+#     space::T
+#     g::F
+# end
 
 
 struct OperatorSpace{F<:Function,S<:AbstractHPSpace}
@@ -26,7 +26,8 @@ end
 
 LinearAlgebra.:⋅(a::VectorHPSpace,b::VectorHPSpace) = OperationField(⋅,(a,b))
 Base.:*(a::ScalarHPSpace,b::AbstractHPSpace) = OperationField(*,(a,b))
-Base.:*(m::Array,a::VectorHPSpace) = OperationField(*,(m,a))Base.:*(f::Function,a::VectorHPSpace) = OperationField(*,(f,a))
+Base.:*(m::Array,a::VectorHPSpace) = OperationField(*,(m,a))
+Base.:*(f::Function,a::VectorHPSpace) = OperationField(*,(f,a))
 
 
 
