@@ -4,7 +4,7 @@ CurrentModule = TriangularhpFEM
 
 # TriangularhpFEM
 
-Documentation for [TriangularhpFEM](https://github.com/iojea/TriangularhpFEM.jl).
+Documentation for [TriangularhpFEM](https://github.com/iojea/TriangularHPFEM.jl).
 
 ```@index
 ```

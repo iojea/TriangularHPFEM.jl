@@ -6,18 +6,16 @@ using ..Meshes
 
 include("fields.jl")
 include("opfields.jl")
-include("legendre.jl")
 include("differentiation.jl")
+include("legendre.jl")
+
 include("show.jl")
 
-const Δ = laplacian    
-const ∇ = gradient
 
 export BivariatePolynomial,TensorPolynomial
 export PolyScalarField, PolyVectorField
 export OperationField
 export LegendreIterator,StandardBasis
-export derivative,divergence,laplacian,gradient,∇,Δ
-
+export gradient, divergence, laplacian
 
 end; #module

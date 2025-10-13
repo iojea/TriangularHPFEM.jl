@@ -2,16 +2,21 @@ module TriangularhpFEM
 
 #using DocStrigExtensions
 
-include("Meshes/Meshes.jl")
-include("PolyFields/PolyFields.jl")
-include("Quadratures/Quadratures.jl")
-#include("Spaces/Spaces.jl")
-
 macro publish(mod,name)
   quote
     using TriangularhpFEM.$mod: $name; export $name
   end
 end
+
+
+include("Meshes/Meshes.jl")
+include("PolyFields/PolyFields.jl")
+include("Quadratures/Quadratures.jl")
+
+
+ include("Spaces/Spaces.jl")
+
+
 
 
 
@@ -28,19 +33,6 @@ end
 @publish Meshes animate_refinement
 
 
-@publish PolyFields BivariatePolynomial
-@publish PolyFields TensorPolynomial
-@publish PolyFields PolyVectorField
-@publish PolyFields OperationField
-@publish PolyFields derivative
-@publish PolyFields gradient
-@publish PolyFields divergence
-@publish PolyFields ∇
-@publish PolyFields dot
-@publish PolyFields laplacian
-@publish PolyFields LegendreIterator
-@publish PolyFields StandardBasis
-@publish PolyFields show
 
 @publish Quadratures QScheme
 @publish Quadratures gmquadrature
@@ -51,6 +43,38 @@ end
 @publish Quadratures degs
 @publish Quadratures integrate
 @publish Quadratures ref_integrate
+
+@publish PolyFields BivariatePolynomial
+@publish PolyFields TensorPolynomial
+@publish PolyFields PolyVectorField
+@publish PolyFields OperationField
+# @publish PolyFields derivative
+# @publish PolyFields gradient
+# @publish PolyFields divergence
+# @publish PolyFields ∇
+@publish PolyFields dot
+# @publish PolyFields laplacian
+@publish PolyFields LegendreIterator
+@publish PolyFields StandardBasis
+@publish PolyFields show
+@publish PolyFields gradient
+@publish PolyFields divergence
+@publish PolyFields laplacian
+@publish PolyFields ∇
+
+@publish Spaces Integrand
+@publish Spaces StdScalarSpace
+@publish Spaces StdVectorSpace
+@publish Spaces StdTensorSpace
+@publish Spaces ScalarSpace
+@publish Spaces VectorSpace
+@publish Spaces TensorSpace
+@publish Spaces OperatorSpace
+@publish Spaces Operation
+@publish Spaces spacetype
+@publish Spaces gradient
+@publish Spaces divergence
+@publish Spaces laplacian
 
 end;
 
