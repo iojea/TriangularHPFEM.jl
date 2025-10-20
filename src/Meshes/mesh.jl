@@ -97,6 +97,16 @@ function psortperm(v)
 end
 
 """
+  $(SIGNATURES)  
+Given a triangle  `t`, of  a mesh `mesh` returs the degrees of the edges of `t`
+"""
+function degrees(t::HPTriangle{I},mesh::HPMesh{F,I,P}) where {F,I,P}
+    (;edgelist) = mesh
+    eds = edges(t)
+    p = Tuple(degree.(getindices(edgelist,eds)))
+    sort(p)
+end
+"""
   $(SIGNATURES)
 
 Given a triangle `t` belonging to a `mesh`, it returns the (sorted) degrees

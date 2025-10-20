@@ -6,8 +6,9 @@ module Quadratures
 using LinearAlgebra
 using StaticArrays
 using Dictionaries
+using Polynomials
 using ..Meshes
-using ..PolyFields
+using ..Spaces
 
 include("auxiliarydata.jl")
 include("refelement.jl")
@@ -15,7 +16,7 @@ include("gmquads.jl")
 include("measures.jl")
 include("integration.jl")
 
-export QScheme, Measure, AuxDegData
+export QScheme, Measure, AuxDegData, AuxMeshData
 export gmquadrature
 export integrate
 export ref_integrate

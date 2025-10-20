@@ -10,12 +10,12 @@ end
 
 
 include("Meshes/Meshes.jl")
-include("PolyFields/PolyFields.jl")
+# include("PolyFields/PolyFields.jl")
+
+
+include("Spaces/Spaces.jl")
+
 include("Quadratures/Quadratures.jl")
-
-
- include("Spaces/Spaces.jl")
-
 
 
 
@@ -25,6 +25,10 @@ include("Quadratures/Quadratures.jl")
 @publish Meshes HPTriangle
 @publish Meshes HPMesh
 @publish Meshes meshhp
+@publish Meshes triangles
+@publish Meshes edges
+@publish Meshes degrees
+@publish Meshes degree
 @publish Meshes circmesh
 @publish Meshes circmesh_graded_center
 @publish Meshes rectmesh
@@ -33,34 +37,31 @@ include("Quadratures/Quadratures.jl")
 @publish Meshes animate_refinement
 
 
-
 @publish Quadratures QScheme
+@publish Quadratures Measure
+@publish Quadratures AuxDegData
+@publish Quadratures AuxMeshData
 @publish Quadratures gmquadrature
 @publish Quadratures compute_dimension
-@publish Quadratures boundary_nodes
+@publish Quadratures boundartrilisty_nodes
 @publish Quadratures matrix_F
 @publish Quadratures matrix_C
 @publish Quadratures degs
 @publish Quadratures integrate
 @publish Quadratures ref_integrate
 
-@publish PolyFields BivariatePolynomial
-@publish PolyFields TensorPolynomial
-@publish PolyFields PolyVectorField
-@publish PolyFields OperationField
-# @publish PolyFields derivative
-# @publish PolyFields gradient
-# @publish PolyFields divergence
-# @publish PolyFields ∇
-@publish PolyFields dot
-# @publish PolyFields laplacian
-@publish PolyFields LegendreIterator
-@publish PolyFields StandardBasis
-@publish PolyFields show
-@publish PolyFields gradient
-@publish PolyFields divergence
-@publish PolyFields laplacian
-@publish PolyFields ∇
+@publish Spaces BivariatePolynomial
+@publish Spaces TensorPolynomial
+@publish Spaces PolyVectorField
+@publish Spaces PolySum
+@publish Spaces LegendreIterator
+@publish Spaces StandardBasis
+@publish Spaces PolySum
+@publish Spaces show
+@publish Spaces gradient
+@publish Spaces divergence
+@publish Spaces laplacian
+@publish Spaces ∇
 
 @publish Spaces Integrand
 @publish Spaces StdScalarSpace
@@ -71,10 +72,9 @@ include("Quadratures/Quadratures.jl")
 @publish Spaces TensorSpace
 @publish Spaces OperatorSpace
 @publish Spaces Operation
-@publish Spaces spacetype
-@publish Spaces gradient
-@publish Spaces divergence
-@publish Spaces laplacian
+@publish Spaces coefftype
+@publish Spaces dot
+@publish Spaces ∫
 
 end;
 
@@ -83,7 +83,6 @@ end;
 #@publish Spaces GradientSpace
 #@publish Spaces Iterator
 #@publish Spaces Integrand
-#@publish Spaces ∫
 #@publish Spaces gradient
 #@publish Spaces ∇
 #@publish Spaces get_space

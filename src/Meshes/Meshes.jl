@@ -12,6 +12,7 @@ using DocStringExtensions
 
 
 export HPTriangulation,HPPoint,HPEdge,HPTriangle,HPMesh
+export degrees,psortperm,edges,pnodes,pedges,triangles,edges,degree
 export meshhp,circmesh,circmesh_graded_center,rectmesh
 export show, plothpmesh, animate_refinement
 
