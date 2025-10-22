@@ -1,74 +1,101 @@
 """
-   ```julia
-    BasisIterator(::Type{P},p,xy) where P<:Integer
-    ```
-Creates an iterator for the Standard Basis (form my 2D Legendre Polynomials). `p` is a `Tuple` of three elements with the degrees for building the basis. Internally, the elements of `p` are converted to type `P`. If omitted, `P` is taken `UInt8`.
-`xy` is a matrix of `L×2` where `xy[:,1]` and `xy[:,2]` correspond to the coordinates `x` and `y` of the points where the basis will be evaluated.
+```
+    LegendreIterator(N)
+```
+Builds an iterator over de Legendre polynomials.
+```
+    julia> for p in LegendreIterator(4)
+           println(p)
+           end
+    1.0
+    1.0*x
+    -0.5 + 1.5*x^2
+    -1.5*x + 2.5*x^3
+```
 """
-struct BasisIterator{P<:Integer,T}
-    p::NTuple{3,P}
-    xy::Matrix{T}
-    Pl::Matrix{T}
-    Plm1::Matrix{T}
-    buf::Vector{T}
-    function BasisIterator{P,T}(p,xy) where {P,T}
-        all(-1 .<= xy .<= 1) || throw(DomainError("x must lie between -1 and 1."))
-        ps = issorted(p) ? p : sort(p)
-        new{P,T}(maybeconvert(P,ps),maybeconvert(T,xy),ones(T,size(xy)),zeros(T,size(xy)),zeros(T,size(xy,1)))
-    end
+struct LegendreIterator{I<:Integer,F<:Number,X}
+    N::I
+    LegendreIterator{I,F,X}(N) where {I,F,X} = new{I,F,X}(I(N))
 end
-BasisIterator(::Type{P},p,xy) where P<:Integer = BasisIterator{P,eltype(xy)}(p,xy)
-BasisIterator(p,xy) = BasisIterator(UInt8,p,xy)
+LegendreIterator(N::I) where {I<:Integer} = LegendreIterator{I,Float64,:x}(N)
+Base.IteratorSize(::Type{<:LegendreIterator}) = Base.HasLength()
+Base.length(l::LegendreIterator{I,F,X}) where {I,F,X} = l.N+1
 
-maybeconvert(::Type{T},v) where T = eltype(v)==T ? v : convert.(T,v)
-
-
-
-p₁(sb::BasisIterator) = sb.p[1]
-p₂(sb::BasisIterator) = sb.p[2]
-p₃(sb::BasisIterator) = sb.p[3]
-
-Base.IteratorSize(::Type{<:BasisIterator}) = Base.HasLength()
-Base.length(sb::BasisIterator) = sum(min(sb.p[2],sb.p[3]-j) for j in 0:sb.p[1]) +sb.p[1] + 1
-
-@inline @views function Base.iterate(sb::BasisIterator{P,T}) where {P,T}
-    (;Pl,Plm1) = sb
-    Pl .= one(T)
-    Plm1 .= zero(T)
-    return copy(Pl[:,1]),(0,0)
+function Base.iterate(::LegendreIterator{I,F,X}) where {I,F,X}
+    q = ImmutablePolynomial((F(1),),X)
+    z = zero(q)
+    q,(0,q,z)
 end
 
-function Base.iterate(sb::BasisIterator{P,T},(ℓy,ℓx)) where {P,T}
-    (p₁,p₂,p₃) = sb.p
-    if (ℓy == p₁) && (ℓx == min(p₃-ℓy,p₂))
+function Base.iterate(l::LegendreIterator{I,F,X},state) where {I,F,X}
+    if state[1] == l.N
         return nothing
-    elseif ℓx < min(p₃-ℓy,p₂)
-        return _iteratex(sb,(ℓy,ℓx))
     else
-        return _iteratey(sb,(ℓy,ℓx))
+        _iterate(l,state)
     end
 end
 
-@views function _iteratex(sb::BasisIterator{P,T},(ℓy,ℓx)) where {P,T}
-        (;xy,Pl,Plm1,buf) = sb
-        ℓx += 1
-        buf .= Pl[:,1]
-        Pl[:,1] .= @. ((2ℓx-1)* xy[:,1] * buf - (ℓx-1) * Plm1[:,1])/ℓx
-        Plm1[:,1] .= buf
-        return Pl[:,1].*Pl[:,2],(ℓy,ℓx)
+function _iterate(::LegendreIterator{I,F,X},state) where {I,F,X}
+    n,p,pm = state
+    if n==0
+        q = ImmutablePolynomial((zero(F),one(F)),X)
+        return q,(1,q,p)
+    else
+        q = ((2n+1)ImmutablePolynomial((zero(F),one(F)),X)*p - n*pm)/(n+1)
+        return q,(n+1,q,p)
+    end
 end
 
-@views function _iteratey(sb::BasisIterator{P,T},(ℓy,ℓx)) where {P,T}
-        (;xy,Pl,Plm1,buf) = sb
-        ℓy += 1
-        buf .= Pl[:,2]
-        Pl[:,2] .= @. ((2ℓy-1)* xy[:,2] * buf - (ℓy-1) * Plm1[:,2])/ℓy
-        Plm1[:,2] .= buf
-        Pl[:,1] .= one(T)
-        Plm1[:,1] .= zero(T)
-        return copy(Pl[:,2]),(ℓy,0)
+###########################
+#     STANDARD BASIS
+###########################
+
+
+struct StandardBasis{P<:Integer,F<:Number,X,Y}
+    degs::NTuple{3,P}
+    Lx::LegendreIterator{P,F,X}
+    Ly::LegendreIterator{P,F,Y}
+    function StandardBasis{P,F,X,Y}(p) where {P,F,X,Y}
+        p = P.(p)
+        p[1]+p[2] >= p[3] || throw(ArgumentError("Degrees does not satisfy p conformity."))
+        Lx = LegendreIterator{P,F,X}(p[1])
+        Ly = LegendreIterator{P,F,Y}(p[2])
+        new{P,F,X,Y}(p,Lx,Ly)
+    end
+end
+StandardBasis(p::NTuple{3,P}) where P = StandardBasis{P,Float64,:x,:y}(p)
+StandardBasis(p₁::P,p₂::P,p₃::P) where P = StandardBasis((p₁,p₂,p₃))
+Base.IteratorSize(::Type{<:StandardBasis}) = Base.HasLength()
+Base.length(sb::StandardBasis) = sum(min(sb.degs[2],sb.degs[3]-j) for j in 0:sb.degs[1]) +sb.degs[1] + 1
+
+function Base.iterate(sb::StandardBasis{P,F,X,Y}) where {P,F,X,Y}
+    (;Lx,Ly) = sb
+    px,stx = iterate(Lx)
+    py,sty = iterate(Ly)
+    TensorPolynomial(px,py),(stx,sty)
 end
 
+function Base.iterate(sb::StandardBasis{P,F,X,Y},state) where {P,F,X,Y}
+    (;degs,Lx,Ly) = sb
+    (p₁,p₂,p₃) = degs
+    stx,sty = state
+    if (stx[1] == p₁) && (sty[1] == min(p₃-p₁,p₂))
+        return nothing
+    elseif sty[1] < min(p₃-stx[1],p₂)
+        return _iteratey(Ly,sty,stx)
+    else
+        return _iteratex(Lx,Ly,stx)
+    end
+end
 
+function _iteratex(Lx,Ly,stx)
+    py,stynew = iterate(Ly) 
+    px,stxnew = iterate(Lx,stx)
+    return TensorPolynomial(px,py),(stxnew,stynew)
+end
 
+function _iteratey(Ly,sty,stx)
+    py,stynew = iterate(Ly,sty)
+    return TensorPolynomial(stx[2],py),(stx,stynew)
+end
 

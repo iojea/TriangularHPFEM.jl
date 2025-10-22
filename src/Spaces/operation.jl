@@ -7,9 +7,15 @@ end
 Operation(a,c,b)  = Operation{typeof(a),typeof(b),typeof(c)}(a,b,c)
 Operation(a,b) = Operation{typeof(a),typeof(b),Nothing}(a,b,nothing)
 
+const Sp = Union{AbstractSpace,Operation}
 
-Base.:*(A::AbstractArray,op::Operation) = Operation(*,A,op)
-Base.:*(a::AbstractSpace,b::AbstractSpace) = Operation(*,a,b)
+Base.:*(n::Number,op::Sp) = Operation(*,n,op)
+Base.:*(A::AbstractArray,op::Sp) = Operation(*,A,op)
+Base.:*(a::Sp,b::Sp) = Operation(*,a,b)
 
-LinearAlgebra.dot(a::AbstractSpace,b::AbstractSpace) = Operation(dot,a,b)
+LinearAlgebra.dot(a::AbstractArray,op::Sp) = Operation(dot,a,op)
+LinearAlgebra.dot(a::Sp,b::Sp) = Operation(dot,a,b)
 
+coefftype(op::Operation) = promote_type(coefftype(op.left),coefftype(op.right))
+
+order(op::Operation) = order(op.left)+order(op.right)

@@ -224,10 +224,10 @@ end
 
 
 function Base.show(io::IO,mesh::HPMesh)
-    println(io,)
+    println(io)
     show(io,mesh.points)
     println(io)
     show(io,mesh.trilist)
-    praintln(io)
+    println(io)
     show(io,mesh.edgelist)
 end

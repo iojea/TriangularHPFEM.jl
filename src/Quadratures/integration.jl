@@ -1,19 +1,20 @@
 function ref_integrate(p::TensorPolynomial{F,X,N,Y,M}) where {F,X,N,Y,M}
     (;px,py) = p
-    qy = integrate(py)
+    qy = Polynomials.integrate(py)
     x = ImmutablePolynomial((zero(F),one(F)))
     qx = px*(qy(x)-qy(-one(F)))
-    q = integrate(qx)
+    q = Polynomials.integrate(qx)
     q(one(F))-q(-one(F))
 end
 
-function ref_integrate(p::BivariatePolynomial{F,X,N,Y,M}) where {F,X,N,Y,M}
-    x = ImmutablePolynomial((zero(F),one(F)),X)
-    ip = integrate(p.p)
-    q = ip(x) - ip(-one(F))
-    iq = integrate(q)
-    iq(one(F))-iq(-one(F))
-end
+ref_integrate(p::PolySum) = ref_integrate(p.left) + ref_integrate(p.right)
+# function ref_integrate(p::BivariatePolynomial{F,X,N,Y,M}) where {F,X,N,Y,M}
+#     x = ImmutablePolynomial((zero(F),one(F)),X)
+#     ip = integrate(p.p)
+#     q = ip(x) - ip(-one(F))
+#     iq = integrate(q)
+#     iq(one(F))-iq(-one(F))
+# end
 
 """
     integrate(fun, scheme)
@@ -109,6 +110,15 @@ function integrate(kernel, scheme::QScheme{N},
     @assert N >= D + 1
     vertices′ = SMatrix{N,D}(vertices)'
     return integrate(kernel, scheme, vertices′)
+end
+
+
+function Base.:*(integrand::Integrand,m::Measure)
+    integrate(coefftype(integrand.op),integrand.op,m)
+end
+
+function integrate(::Type{Spaces.Constant},op,m::Measure)
+    println("yeah")
 end
 
 
