@@ -75,7 +75,7 @@ include("Quadratures/Quadratures.jl")
 @publish Spaces coefftype
 @publish Spaces dot
 @publish Spaces ∫
-
+@publish Spaces order
 end;
 
 #@publish Spaces BasisIterator

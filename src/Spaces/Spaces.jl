@@ -35,4 +35,5 @@ export ∫
 export gradient,divergence,laplacian
 export coefftype
 export dot
+export order
 end; #module

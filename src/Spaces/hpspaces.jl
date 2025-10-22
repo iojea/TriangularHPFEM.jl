@@ -52,19 +52,20 @@ Base.promote_type(::Union{Nothing,Type{Nothing}},::Union{Variable,Type{Variable}
 Base.promote_type(::Union{Variable,Type{Variable}},::Union{Nothing,Type{Nothing}}) = Variable
 
 
-struct Order{B}
-    v::Val{B}
-end
+struct Order{B} end
 
-order(::PolyField) = Order(Val(0))
-order(::OperatorSpace{typeof(gradient),S}) where S = Order(Val(1))
-order(::OperatorSpace{typeof(divergence),S}) where S = Order(Val(1))
-order(::OperatorSpace{typeof(laplacian),S}) where S = Order(Val(2))
+order(::Number) = Order{0}()
+order(::AbstractArray) = Order{0}()
+order(::PolyField) = Order{0}()
+order(::OperatorSpace{typeof(gradient),S}) where S = Order{1}()
+order(::OperatorSpace{typeof(divergence),S}) where S = Order{1}()
+order(::OperatorSpace{typeof(laplacian),S}) where S = Order{2}()
+Base.:+(::Order{B},::Order{C}) where {B,C} = Order{B+C}()
 
 
 # # Sintactic sugar
 struct Integrand{O}
-    op::
+    op
 end
 
 # Base.:*(f::Integrand,m::Measure) = integrate(CoeffType(f.op),f.op,m)
