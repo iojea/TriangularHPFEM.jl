@@ -57,6 +57,7 @@ struct Order{B} end
 order(::Number) = Order{0}()
 order(::AbstractArray) = Order{0}()
 order(::PolyField) = Order{0}()
+order(::AbstractSpace) = Order{0}()
 order(::OperatorSpace{typeof(gradient),S}) where S = Order{1}()
 order(::OperatorSpace{typeof(divergence),S}) where S = Order{1}()
 order(::OperatorSpace{typeof(laplacian),S}) where S = Order{2}()

@@ -19,4 +19,3 @@ LinearAlgebra.dot(a::Sp,b::Sp) = Operation(dot,a,b)
 coefftype(op::Operation) = promote_type(coefftype(op.left),coefftype(op.right))
 
 order(op::Operation) = order(op.left)+order(op.right)
-

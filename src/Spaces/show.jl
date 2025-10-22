@@ -50,3 +50,5 @@ function Base.show(io::IO,mimetype::MIME"text/plain", p::P) where P<:TensorPolyn
     printpoly(io,p.py,mimetype)
     print(io,")")
 end
+
+Base.show(io::IO, mimetype::MIME"text/plain", o::Order{B}) where B = print(io,B)

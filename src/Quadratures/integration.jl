@@ -114,11 +114,11 @@ end
 
 
 function Base.:*(integrand::Integrand,m::Measure)
-    integrate(coefftype(integrand.op),integrand.op,m)
+    integrate(coefftype(integrand.op),order(integrand.op),integrand.op,m)
 end
 
-function integrate(::Type{Spaces.Constant},op,m::Measure)
-    println("yeah")
+function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure) where B
+    println("yes")
 end
 
 
