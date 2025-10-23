@@ -15,7 +15,7 @@ function Measure(mesh::HPMesh{F,P,I}) where {F,P,I}
         d = degrees(t,mesh)
         isin,(_,_) = gettoken(aux,d)
         if !isin
-            set!(aux,d,AuxDegData{F}(d))
+            set!(aux,d,AuxDegData(F,d))
         end
     end
     schs = Vector{QScheme{2,F,P}}()

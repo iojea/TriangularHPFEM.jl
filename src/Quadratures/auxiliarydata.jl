@@ -4,12 +4,12 @@ struct AuxDegData{F<:AbstractFloat,N}
     local_tensor::MMatrix{N,N,F}
 end
 
-function AuxDegData{F}(p::NTuple{3,P}) where {F<:AbstractFloat,P<:Integer}
+function AuxDegData(::Type{F},p::Tuple{P,P,P}) where {F<:AbstractFloat,P<:Integer}
     ∂nodes = boundary_nodes(F,p)
     C = matrix_C(p,∂nodes)
     N = size(C,1)
     local_tensor = MMatrix{N,N,F}(zeros(F,N,N))
-    AuxDegData{F}(∂nodes,C,local_tensor)
+    AuxDegData{F,N}(∂nodes,C,local_tensor)
 end
 
 degs(::Type{P},p₁,p₂,p₃) where {P<:Integer} = (P(p₁),P(p₂),P(p₃))
