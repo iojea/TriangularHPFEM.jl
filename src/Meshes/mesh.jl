@@ -2,17 +2,20 @@ const TriangleList{I,P,F} = Dictionary{HPTriangle{I},TriangleProperties{P,F}} wh
 const EdgeList{I,P} = Dictionary{HPEdge{I},EdgeProperties{P,Bool}} where {I,P}
 #const AuxList{P,N,F} = Dictionary{NTuple{3,P},AuxData{N,F}} where {P,N,F}
 
-struct DOFs{I<:Integer}
-    by_edge::Dictionary{HPEdge{I},Vector{I}}
-    by_tri::Dictionary{HPTriangle{I},Vector{I}}
-end
-
-DOFs(::Type{I}) where I<:Integer = DOFs(Dictionary{HPEdge{I},Vector{I}}(),Dictionary{HPTriangle{I},Vector{I}}())
-
-
-
 abstract type HPTriangulation end
 
+struct DOFs{I<:Integer}
+    by_edge::Dictionary{HPEdge{I}, SArray{S,I, 1} where S<:Tuple}
+    by_tri::Dictionary{HPEdge{I}, MArray{S,I, 1} where S<:Tuple} 
+end
+
+#DOFs(::Type{I}) where I<:Integer = DOFs(Dictionary{HPEdge{I},SArray{S,I,1} where S<:Tuple}(),Dictionary{HPTriangle{I},MArray{S,I,1} where S<:Tuple}())
+
+function DOFs(::Type{I}) where I<:Integer
+    by_edge = Dictionary{HPEdge{I},SArray{S,I,1} where S<:Tuple}()
+    by_tri= Dictionary{HPEdge{I}, MArray{S,I, 1} where S<:Tuple}()
+    DOFs{I}(by_edge,by_tri)
+end
 
 """
     $(SIGNATURES)
@@ -231,11 +234,12 @@ Creates a dictionary (from `Dictionaries.jl`) where the keys are the edges of `m
 """
 function degrees_of_freedom_by_edge!(mesh::HPMesh{F,I,P}) where {F,I,P}
     (;points,edgelist,dofs) = mesh 
-    by_edge  = dofs.by_edge
+    (;by_edge)  = dofs
     i        = size(points,2)+1
     for edge in edges(edgelist)
-        med  = collect(i:i+degree(edgelist[edge])-2)
-        set!(by_edge,edge,[edge[1],med...,edge[2]])
+        med  = collect(I(i):I(i+degree(edgelist[edge])-2))
+        v = SVector{length(med)+2,I}(edge[1],med...,edge[2])
+        set!(by_edge,edge,v)
         i   += degree(edgelist[edge])-1
     end
 end
@@ -259,13 +263,11 @@ function degrees_of_freedom!(mesh::HPMesh{F,I,P}) where {F,I,P}
     k       = maximum(maximum.(by_edge))+1 #first non-edge dof
     for t in triangles(trilist)
         p,t_edges = pedges(t,mesh)
-        newdofs = zeros(I,compute_dimension(p))
+        newdofs = @MVector zeros(I,compute_dimension(p))
         set!(by_tri,t,newdofs)
         j = 1 #counter of dof in current triangle
         println(t_edges)
         @inbounds for i in 1:3
-            println(t_edges[i])
-            println(by_edge[t_edges[i]])
             newdof = by_edge[t_edges[i]]
             if  same_order(t_edges[i],edgelist)
                 newdofs[j:j+length(newdof)-2] .= newdof[1:end-1]

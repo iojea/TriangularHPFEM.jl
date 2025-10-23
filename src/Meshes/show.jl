@@ -33,9 +33,9 @@ function Base.show(io::IO,t::EdgeProperties)
     if t.marker==0
         m = :Ω°
     elseif t.marker==1
-        m = :Γ𝔇
+        m = :∂𝔇
     elseif t.marker==2
-        m = :Γ𝔫
+        m = :∂𝔑
     else 
         m = t.marker
     end 
@@ -206,7 +206,7 @@ end
 function Base.show(io::IO,mime::MIME"text/plain",mesh::HPMesh{I,P}) where {I,P}
     println(io,typeof(mesh))
     header = Markdown.parse("""
-        + $(size(mesh.points,2)) nodes.
+        + $(length(mesh.points)) nodes.
         + $(length(mesh.trilist)) triangles.
         + $(length(mesh.edgelist)) edges.
     """)
