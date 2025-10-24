@@ -206,7 +206,7 @@ end
 function Base.show(io::IO,mime::MIME"text/plain",mesh::HPMesh{I,P}) where {I,P}
     println(io,typeof(mesh))
     header = Markdown.parse("""
-        + $(size(mesh.points,2)) nodes.
+        + $(length(mesh.points)) nodes.
         + $(length(mesh.trilist)) triangles.
         + $(length(mesh.edgelist)) edges.
     """)
