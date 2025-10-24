@@ -1,13 +1,12 @@
 name = "TriangularhpFEM"
 uuid = "563cddf2-6e0b-42e9-b4ef-ce1a8aa3ba4e"
-authors = ["Ignacio Ojea"]
 version = "1.0.0-DEV"
+authors = ["Ignacio Ojea"]
 
 [deps]
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ExactPredicates = "429591f6-91af-11e9-00e2-59fbe8cec110"
-HyperDualNumbers = "50ceba7f-c3ee-5a84-a6e8-3ad40456ec97"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
@@ -22,7 +21,6 @@ Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
 Dictionaries = "0.4.4"
 DocStringExtensions = "0.9.3"
 ExactPredicates = "2.2.8"
-HyperDualNumbers = "4.0.10"
 LinearAlgebra = "1.11.0"
 Makie = "0.22.2"
 Markdown = "1.11.0"

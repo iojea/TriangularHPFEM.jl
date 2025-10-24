@@ -117,8 +117,8 @@ function Base.:*(integrand::Integrand,m::Measure)
     integrate(coefftype(integrand.op),order(integrand.op),integrand.op,m)
 end
 
-function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure) where B
-    println("yes")
+function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure{M}) where {B,M<:HPMesh}
+    (;mesh) = m
 end
 
 

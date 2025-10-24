@@ -1,5 +1,5 @@
 module Porblems
-using COmmonSolve
+using CommonSolve
 
 struct HProblem{S<:AbstractSpace}
     a
@@ -7,8 +7,9 @@ struct HProblem{S<:AbstractSpace}
     space::S
     g
 end
-function HPProblem(a,b,space,g)
-    compute_matrix(a,space)
+
+function HProblem(a,b,space,g)
+    
 end
 
 function CommonSolve.solve(prob::HProblem)

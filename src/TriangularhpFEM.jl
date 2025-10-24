@@ -28,6 +28,7 @@ include("Quadratures/Quadratures.jl")
 @publish Meshes edges
 @publish Meshes degrees
 @publish Meshes degree
+@publish Meshes degrees_of_freedom!
 @publish Meshes circmesh
 @publish Meshes circmesh_graded_center
 @publish Meshes rectmesh
@@ -42,7 +43,7 @@ include("Quadratures/Quadratures.jl")
 @publish Quadratures AuxMeshData
 @publish Quadratures gmquadrature
 @publish Quadratures compute_dimension
-@publish Quadratures boundartrilisty_nodes
+@publish Quadratures boundary_nodes
 @publish Quadratures matrix_F
 @publish Quadratures matrix_C
 @publish Quadratures degs

@@ -33,9 +33,9 @@ function Base.show(io::IO,t::EdgeProperties)
     if t.marker==0
         m = :Ω°
     elseif t.marker==1
-        m = :Γ𝔇
+        m = :∂𝔇
     elseif t.marker==2
-        m = :Γ𝔫
+        m = :∂𝔑
     else 
         m = t.marker
     end 

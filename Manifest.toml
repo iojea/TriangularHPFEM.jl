@@ -2,7 +2,7 @@
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "2be3716dc51c4ae10c8b195f4787772619d9f585"
+project_hash = "56d97bf8607663647bf1b2ae66284dea96a488b8"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -116,12 +116,6 @@ git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.18.5+0"
 
-[[deps.Calculus]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "9cb23bbb1127eefb022b022481466c0f1127d430"
-uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
-version = "0.5.2"
-
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
 git-tree-sha1 = "e4c6a16e77171a5f5e25e9646617ab1c276c5607"
@@ -169,12 +163,6 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
-
-[[deps.CommonSubexpressions]]
-deps = ["MacroTools"]
-git-tree-sha1 = "cda2cfaebb4be89c9084adaca7dd7333369715c5"
-uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
-version = "0.3.1"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
@@ -460,12 +448,6 @@ deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll",
 git-tree-sha1 = "f923f9a774fcf3f5cb761bfa43aeadd689714813"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "8.5.1+0"
-
-[[deps.HyperDualNumbers]]
-deps = ["Calculus", "CommonSubexpressions", "LinearAlgebra", "NaNMath", "SpecialFunctions"]
-git-tree-sha1 = "a7e4a62f3428a3bbc0bfd8d06274f95c8af9e60d"
-uuid = "50ceba7f-c3ee-5a84-a6e8-3ad40456ec97"
-version = "4.0.10"
 
 [[deps.HypergeometricFunctions]]
 deps = ["LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
@@ -840,12 +822,6 @@ version = "0.3.4"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2025.5.20"
 
-[[deps.NaNMath]]
-deps = ["OpenLibm_jll"]
-git-tree-sha1 = "9b8215b1ee9e78a293f99797cd31375471b2bcae"
-uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "1.1.3"
-
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
 git-tree-sha1 = "d92b107dbb887293622df7697a2223f9f8176fcd"
@@ -1107,9 +1083,9 @@ version = "1.3.1"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
-git-tree-sha1 = "852bd0f55565a9e973fcfee83a84413270224dc4"
+git-tree-sha1 = "5b3d50eb374cea306873b371d3f8d3915a018f0b"
 uuid = "79098fc4-a85e-5d69-aa6a-4863f24498fa"
-version = "0.8.0"
+version = "0.9.0"
 
 [[deps.Rmath_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1232,9 +1208,9 @@ weakdeps = ["ChainRulesCore", "Statistics"]
     StaticArraysStatisticsExt = "Statistics"
 
 [[deps.StaticArraysCore]]
-git-tree-sha1 = "192954ef1208c7019899fbf8049e717f92959682"
+git-tree-sha1 = "6ab403037779dae8c514bad259f32a447262455a"
 uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-version = "1.4.3"
+version = "1.4.4"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra"]
@@ -1254,15 +1230,15 @@ version = "1.7.1"
 
 [[deps.StatsBase]]
 deps = ["AliasTables", "DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "2c962245732371acd51700dbb268af311bddd719"
+git-tree-sha1 = "a136f98cefaf3e2924a66bd75173d1c891ab7453"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.34.6"
+version = "0.34.7"
 
 [[deps.StatsFuns]]
 deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "8e45cecc66f3b42633b8ce14d431e8e57a3e242e"
+git-tree-sha1 = "91f091a8716a6bb38417a6e6f274602a19aaa685"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "1.5.0"
+version = "1.5.2"
 weakdeps = ["ChainRulesCore", "InverseFunctions"]
 
     [deps.StatsFuns.extensions]
@@ -1368,7 +1344,7 @@ uuid = "5639c1d2-226c-5e70-8d55-b3095415a16a"
 version = "1.6.2+0"
 
 [[deps.TriangularhpFEM]]
-deps = ["Dictionaries", "DocStringExtensions", "ExactPredicates", "HyperDualNumbers", "LinearAlgebra", "Makie", "Markdown", "Pkg", "Polynomials", "Printf", "StaticArrays", "Test", "Triangulate"]
+deps = ["Dictionaries", "DocStringExtensions", "ExactPredicates", "LinearAlgebra", "Makie", "Markdown", "Pkg", "Polynomials", "Printf", "StaticArrays", "Test", "Triangulate"]
 path = "."
 uuid = "563cddf2-6e0b-42e9-b4ef-ce1a8aa3ba4e"
 version = "1.0.0-DEV"
