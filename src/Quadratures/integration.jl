@@ -119,6 +119,15 @@ end
 
 function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure{M}) where {B,M<:HPMesh}
     (;mesh) = m
+    degrees_of_freedom!(mesh)
+    (;trilist,DOFs) = mesh
+    (;by_tri) = DOFs
+    ℓ = sum(x->length(x)^2,by_tri)
+    I = Vector{Int32}(undef,ℓ)
+    J = Vector{Int32}(undef,ℓ)
+    V = Vector{Float64}(undef,ℓ)
+    Aₜ = MMatrix{2,2}(zeros(2,2))
+    iAₜ = MMatrix{2,2}(zeros(2,2))
     
 end
     
