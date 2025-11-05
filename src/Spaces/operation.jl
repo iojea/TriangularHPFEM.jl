@@ -12,10 +12,11 @@ const Sp = Union{AbstractSpace,Operation}
 Base.:*(n::Number,op::Sp) = Operation(*,n,op)
 Base.:*(A::AbstractArray,op::Sp) = Operation(*,A,op)
 Base.:*(a::Sp,b::Sp) = Operation(*,a,b)
+Base.:*(a::Sp,b::Function) = Operation(*,a,b)
 
 LinearAlgebra.dot(a::AbstractArray,op::Sp) = Operation(dot,a,op)
 LinearAlgebra.dot(a::Sp,b::Sp) = Operation(dot,a,b)
 
 coefftype(op::Operation) = promote_type(coefftype(op.left),coefftype(op.right))
 
-order(op::Operation) = order(op.left)+order(op.right)
+order(op::Operation) = combine(order(op.left),order(op.right))

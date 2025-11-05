@@ -57,17 +57,21 @@ struct Order{B} end
 order(::Number) = Order{0}()
 order(::AbstractArray) = Order{0}()
 order(::PolyField) = Order{0}()
-order(::AbstractSpace) = Order{0}()
-order(::OperatorSpace{typeof(gradient),S}) where S = Order{1}()
-order(::OperatorSpace{typeof(divergence),S}) where S = Order{1}()
-order(::OperatorSpace{typeof(laplacian),S}) where S = Order{2}()
-Base.:+(::Order{B},::Order{C}) where {B,C} = Order{B+C}()
-
-
+order(::Function) = Order{0}()
+order(::AbstractSpace) = Order{(0,)}()
+order(::OperatorSpace{typeof(gradient),S}) where S = Order{(1,)}()
+order(::OperatorSpace{typeof(divergence),S}) where S = Order{(1,)}()
+order(::OperatorSpace{typeof(laplacian),S}) where S = Order{(2,)}()
+combine(::Order{B},::Order{C}) where {B,C} = Order{(B...,C...)}()
+combine(::Order{B},::Order{0}) where B = Order{B}()
+combine(::Order{0},::Order{B}) where B = Order{B}()
+ 
 # # Sintactic sugar
-struct Integrand{O}
+
+struct Integrand
     op
 end
+#Integrand(op) = Integrand()
 
 # Base.:*(f::Integrand,m::Measure) = integrate(CoeffType(f.op),f.op,m)
 

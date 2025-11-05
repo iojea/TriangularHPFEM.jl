@@ -23,7 +23,7 @@ function Measure(mesh::HPMesh{F,P,I},degsch) where {F,P,I}
     degsch = isodd(degsch) ? P(degsch) : P(degsch+1)
     sch = gmquadrature(Val(2),degsch)
     #push!(schs,gmquadrature(Val(2),P(35)))
-    Measure{typeof(mesh),P,QScheme{2,F,P}}(mesh,aux,sch)
+    Measure{typeof(mesh),P,F,QScheme{2,F,P}}(mesh,aux,sch)
 end
 
 function Measure(mesh::HPMesh{F,P,I}) where {F,P,I}

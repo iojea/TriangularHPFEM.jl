@@ -114,21 +114,57 @@ end
 
 
 function Base.:*(integrand::Integrand,m::Measure)
-    integrate(coefftype(integrand.op),order(integrand.op),integrand.op,m)
+    coefftype(integrand.op),order(integrand.op),integrand.op,m
 end
 
-function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure{M}) where {B,M<:HPMesh}
-    (;mesh) = m
+function transform_matrix!(A, vert)
+    @views A[:, 1] .= 0.5(vert[:, 3] - vert[:, 2])
+    @views A[:, 2] .= 0.5(vert[:, 1] - vert[:, 2])
+end
+
+function transform_term!(b, vert)
+    @views b .= 0.5(vert[:, 1] + vert[:, 3])
+end
+
+
+function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure{M}) where {B,F,I,P,M<:HPMesh{F,I,P}}
+    (;mesh,aux) = m
     degrees_of_freedom!(mesh)
+    tensors = Dict{NTuple{3,P},Array{F,2*B}}()
     (;trilist,DOFs) = mesh
     (;by_tri) = DOFs
+    for p in keys(by_tri)
+        
+    end
     ℓ = sum(x->length(x)^2,by_tri)
-    I = Vector{Int32}(undef,ℓ)
     J = Vector{Int32}(undef,ℓ)
+    K = Vector{Int32}(undef,ℓ)
     V = Vector{Float64}(undef,ℓ)
     Aₜ = MMatrix{2,2}(zeros(2,2))
     iAₜ = MMatrix{2,2}(zeros(2,2))
     
+    r = 1
+    @inbounds for t in triangles(trilist)
+        dofT = dof[t]
+        p, pnod = pnodes(t, mesh)
+        transform_matrix!(Aₜ, view(points, :, pnod))
+        iAₜ .= inv(Aₜ)
+        iAₜ .= iAₜ * iAₜ'
+        z = vec(iAₜ)
+        dAₜ = abs(det(Aₜ))
+        v = zeros(dim, dim)
+        for j = 1:dim, i = 1:j
+            v[i, j] = S[i, j, :] ⋅ z
+        end
+        v = dAₜ * C' * Symmetric(v) * C
+        i = repeat(dofT, dim)
+        j = repeat(dofT, inner = dim)
+        J[r:r+dim^2-1] = i
+        K[r:r+dim^2-1] = j
+        V[r:r+dim^2-1] = v
+        r += dim^2
+    end
+    sparse(J, K, V)
 end
     
 
