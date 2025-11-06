@@ -5,7 +5,7 @@ abstract type PolyField{F,X,Y} <:Function end
 #################              SCALAR FIELDS              #################
 ###########################################################################
 #
-abstract type PolyScalarField{F,X,Y} <: PolyField{F,X,Y} end
+abstract type PolyScalarField{F,X,N,Y,M} <: PolyField{F,X,Y} end
 indeterminate(::AbstractPolynomial{T,X}) where {T,X} = X
 indeterminates(::PolyField{F,X,Y}) where {F,X,Y} = (X,Y)
 # 
@@ -22,7 +22,7 @@ _zerofill(t::NTuple{K,T},N) where {K,T} = K>=N ? t : (t...,zeros(T,N-K)...)
 Creates a bivariate polynomial with the coefficients stored in  `t`. `t` should be a tuple of tuples. Each sub-tuple defines a polynomial on the variable `x`. This polynomials are the coefficients of a polynomial on `y`, thus forming a bivariate polynomial.
 
 """ 
-struct BivariatePolynomial{F,X,N,Y,M} <: PolyScalarField{F,X,Y}
+struct BivariatePolynomial{F,X,N,Y,M} <: PolyScalarField{F,X,N,Y,M}
     p::ImmutablePolynomial{ImmutablePolynomial{F,X,N},Y,M}
 end
 function BivariatePolynomial{X,Y}(t::Tuple) where {X,Y}
@@ -71,7 +71,7 @@ The indeterminates can be specified:
 ```
 produces the same polynomials, but on the variables `(z,ξ)`. 
 """
-struct TensorPolynomial{F,X,N,Y,M} <: PolyScalarField{F,X,Y}
+struct TensorPolynomial{F,X,N,Y,M} <: PolyScalarField{F,X,N,Y,M}
     px::ImmutablePolynomial{F,X,N}
     py::ImmutablePolynomial{F,Y,M}
 end
@@ -121,24 +121,24 @@ Base.promote(p::BivariatePolynomial,q::TensorPolynomial) = (p,BivariatePolynomia
 Base.promote(q::TensorPolynomial,p::BivariatePolynomial) = (BivariatePolynomial(q),p)
 
 
-# for op in (:+,:-,:*)
-#     expr = Meta.parse("(Base.:$op)(p::BivariatePolynomial,q::TensorPolynomial) = $op(p,convert(BivariatePolynomial,q))")
-#     eval(expr)
-#     expr = Meta.parse("(Base.:$op)(q::TensorPolynomial,p::BivariatePolynomial) = $op(p,q)")
-#     eval(expr)
-# end
-# for op in (:+,:-)
-#     expr = Meta.parse("(Base.:$op)(p::TensorPolynomial,q::TensorPolynomial) = $op(convert(BivariatePolynomial,p),convert(BivariatePolynomial,q))")
-#     eval(expr)
-# end
+for op in (:+,:-,:*)
+    expr = Meta.parse("(Base.:$op)(p::BivariatePolynomial,q::TensorPolynomial) = $op(p,convert(BivariatePolynomial,q))")
+    eval(expr)
+    expr = Meta.parse("(Base.:$op)(q::TensorPolynomial,p::BivariatePolynomial) = $op(p,q)")
+    eval(expr)
+end
+for op in (:+,:-)
+    expr = Meta.parse("(Base.:$op)(p::TensorPolynomial,q::TensorPolynomial) = $op(convert(BivariatePolynomial,p),convert(BivariatePolynomial,q))")
+    eval(expr)
+end
 
 
 ###############################
 #       VECTOR FIELDS
 ###############################
-struct PolyVectorField{F,X,Y} <: PolyField{F,X,Y}
-    s1::PolyScalarField{F,X,Y}
-    s2::PolyScalarField{F,X,Y}
+struct PolyVectorField{F,X,N1,N2,Y,M1,M2} <: PolyField{F,X,Y}
+    s1::PolyScalarField{F,X,N1,Y,M1}
+    s2::PolyScalarField{F,X,N2,Y,M2}
 end
 
 (v::PolyVectorField)(x,y) = HPPoint(v.s1(x,y),v.s2(x,y))
@@ -167,14 +167,14 @@ function Base.:*(p::AbstractPolynomial,v::PolyVectorField)
     PolyVectorField(p*v[1],p*v[2])    
 end
 Base.:*(a::Number,v::PolyVectorField) = PolyVectorField(a*v[1],a*v[2])
-function Base.:*(w::AbstractMatrix,v::PolyVectorField{F,X,Y}) where {F,X,Y}
+function Base.:*(w::AbstractMatrix,v::PolyVectorField)
     size(w) == (2,1) && return _vector_polyvector(w,v)
     size(w) == (2,2) && return _matrix_polyvector(w,v)
     throw(ArgumentError("It is only possible to multiply by a matrix of 2×2 or 2⨯1. For vector-vector field multiplication, check ⋅."))
 end
 
 _vector_polyvector(w,v) = w[1]*v[1] + w[2]*v[2]
-_matrix_polyvector(w,v) = PolyVectorField(w[1,1]*v.s1+w[1,2]*v.s2,w[2,1]*v.s1+w[2,2]*v.s2)
+_matrix_polyvector(w,v) = PolyVectorField(w[1,1]*v[1]+w[1,2]*v[2],w[2,1]*v[1]+w[2,2]*v[2])
 
 function LinearAlgebra.dot(w::AbstractVector,v::PolyVectorField)
     length(w)!=2 && throw(ArgumentError("Vector must have length 2."))

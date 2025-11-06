@@ -20,3 +20,8 @@ LinearAlgebra.dot(a::Sp,b::Sp) = Operation(dot,a,b)
 coefftype(op::Operation) = promote_type(coefftype(op.left),coefftype(op.right))
 
 order(op::Operation) = combine(order(op.left),order(op.right))
+
+polynize(thing,::PolyField) = thing
+polynize(op::Operation,f::PolyField,g::PolyField) = op.operator(polynize(op.left,f),polynize(op.right,g))
+polynize(op::Operation,f::PolyField) = polynize(op,f,f)
+

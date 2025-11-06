@@ -8,6 +8,7 @@ using StaticArrays
 using Dictionaries
 using Polynomials
 using ..Meshes
+using ..PolyFields
 using ..Spaces
 
 include("auxiliarydata.jl")

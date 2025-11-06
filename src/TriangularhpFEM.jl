@@ -10,11 +10,8 @@ end
 
 
 include("Meshes/Meshes.jl")
-# include("PolyFields/PolyFields.jl")
-
-
+include("PolyFields/PolyFields.jl")
 include("Spaces/Spaces.jl")
-
 include("Quadratures/Quadratures.jl")
 
 
@@ -36,6 +33,19 @@ include("Quadratures/Quadratures.jl")
 @publish Meshes plothpmesh
 @publish Meshes animate_refinement
 
+@publish PolyFields PolyField
+@publish PolyFields TensorPolynomial
+@publish PolyFields PolyScalarField
+@publish PolyFields PolyVectorField
+@publish PolyFields PolySum
+@publish PolyFields PolyTensorField 
+@publish PolyFields gradient
+@publish PolyFields divergence
+@publish PolyFields laplacian
+@publish PolyFields ∇
+@publish PolyFields LegendreIterator
+@publish PolyFields StandardBasis
+@publish PolyFields outer
 
 @publish Quadratures QScheme
 @publish Quadratures Measure
@@ -50,18 +60,9 @@ include("Quadratures/Quadratures.jl")
 @publish Quadratures integrate
 @publish Quadratures ref_integrate
 
-@publish Spaces BivariatePolynomial
-@publish Spaces TensorPolynomial
-@publish Spaces PolyVectorField
-@publish Spaces PolySum
-@publish Spaces LegendreIterator
-@publish Spaces StandardBasis
-@publish Spaces PolySum
 @publish Spaces show
-@publish Spaces gradient
-@publish Spaces divergence
-@publish Spaces laplacian
-@publish Spaces ∇
+@publish Spaces polynize
+@publish Spaces basis
 
 @publish Spaces Integrand
 @publish Spaces StdScalarSpace
@@ -72,6 +73,10 @@ include("Quadratures/Quadratures.jl")
 @publish Spaces TensorSpace
 @publish Spaces OperatorSpace
 @publish Spaces Operation
+@publish Spaces gradient
+@publish Spaces divergence
+@publish Spaces laplacian
+@publish Spaces ∇
 @publish Spaces coefftype
 @publish Spaces dot
 @publish Spaces ∫

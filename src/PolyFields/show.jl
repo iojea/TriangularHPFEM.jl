@@ -1,6 +1,6 @@
-function Base.show(io::IO, mimetype::MIME"text/plain", p::P) where {P<:BivariatePolynomial}
-    printpoly2(io,p.p,mimetype)
-end
+# function Base.show(io::IO, mimetype::MIME"text/plain", p::P) where {P<:BivariatePolynomial}
+#     printpoly2(io,p.p,mimetype)
+# end
 
 printcoeffs(io::IO, pj::P, j, mimetype) where P<:AbstractPolynomial = printpoly(io,pj,mimetype)
 

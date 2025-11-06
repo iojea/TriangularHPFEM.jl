@@ -19,6 +19,9 @@ gradient(s::StdScalarSpace) = OperatorSpace(gradient,s)
 divergence(s::StdVectorSpace) = OperatorSpace(divergence,s)
 laplacian(s::StdScalarSpace) = OperatorSpace(laplacian,s)
 
+polynize(::AbstractSpace,p::PolyField) = p
+polynize(op::OperatorSpace,p::PolyField) = op.operator(p)
+
 #spacetype(s::OperatorSpace{::Type{typeof(gradient),StdScalarSpace}}) = VectorSpace
 
 # LinearAlgebra.dot()
@@ -65,7 +68,10 @@ order(::OperatorSpace{typeof(laplacian),S}) where S = Order{(2,)}()
 combine(::Order{B},::Order{C}) where {B,C} = Order{(B...,C...)}()
 combine(::Order{B},::Order{0}) where B = Order{B}()
 combine(::Order{0},::Order{B}) where B = Order{B}()
- 
+
+
+basis(::StdScalarSpace) = StandardBasis
+
 # # Sintactic sugar
 
 struct Integrand

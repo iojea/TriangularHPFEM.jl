@@ -1,18 +1,20 @@
-struct OperationField{F<:Function,F1,F2} <: Function
-    op::F
-    args::Tuple{F1,F2}
+struct PolySum{F,X,Y,F1<:PolyField{F,X,Y},F2<:PolyField{F,X,Y}} <: PolyScalarField{F,X,Y}
+    left::F1
+    right::F2
 end
 
-arguments(of::OperationField) = of.args
-operation(of::OperationField) = of.op
+(p::PolySum)(x,y) = p.left(x,y)+p.right(x,y)
+(p::PolySum)(x) = p.left(x) + p.right(x)
 
-(of::OperationField)(x,y) = operation(of)((f(x,y) for f in arguments(of))...)
-(of::OperationField)(x) = of(x[1],x[2])
+Base.:+(p::P,q::Q) where {F,X,Y,P<:PolyField{F,X,Y},Q<:PolyField{F,X,Y}} = PolySum(p,q)
 
-for op in (:+,:-,:*)
-    expr = Meta.parse("(Base.:$op)(p::Function,q::Function) = OperationField($op,(p,q))")
-    eval(expr)
-end
+LinearAlgebra.dot(p::PolyVectorField{F,X,Y},q::PolyVectorField{F,X,Y})  where {F,X,Y} = p.s1*q.s1 + p.s2*q.s2
+
+Base.:*(ps::PolySum,p::TensorPolynomial) = ps.left*p + ps.right*p
+Base.:*(p::TensorPolynomial,ps::PolySum) = ps*p
+Base.:*(ps::PolySum,p::PolyVectorField) = PolyVectorField(ps*p.s1,ps*p.s2)
+Base.:*(p::PolyVectorField,ps::PolySum) = ps*p
+Base.:*(ps::PolySum,qs::PolySum) = ps.left*qs.left + ps.right*qs.left + ps.right*qs.left + ps.right*qs.right
 
 
 
