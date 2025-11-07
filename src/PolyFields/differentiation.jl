@@ -32,7 +32,7 @@
 
 
 
-function Polynomials.derivative(p::TensorPolynomial{F,X,N,Y,M},z::Symbol) where {F,X,N,Y,M}
+function Polynomials.derivative(p::TensorPolynomial{F,X,Y},z::Symbol) where {F,X,Y}
     z == X && return TensorPolynomial(derivative(p.px),p.py)
     z == Y && return TensorPolynomial(p.px,derivative(p.py))
     throw(ArgumentError("Z must be an indeterminate present in the field, but Z=$z was provided for a field with indeterminates X=$X and Y=$Y"))
@@ -46,7 +46,7 @@ end
 function gradient(p::PolyScalarField{F,X,Y}) where {F,X,Y}
     dx = derivative(p,X)
     dy = derivative(p,Y)
-    PolyVectorField(dx,dy)
+    PolyVectorField([dx,dy])
 end
 
 function divergence(v::PolyVectorField)

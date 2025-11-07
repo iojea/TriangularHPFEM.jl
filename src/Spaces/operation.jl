@@ -21,7 +21,11 @@ coefftype(op::Operation) = promote_type(coefftype(op.left),coefftype(op.right))
 
 order(op::Operation) = combine(order(op.left),order(op.right))
 
+const OPDICT = Dict(dot => _outer)
 polynize(thing,::PolyField) = thing
-polynize(op::Operation,f::PolyField,g::PolyField) = op.operator(polynize(op.left,f),polynize(op.right,g))
+function polynize(op::Operation,f::PolyField,g::PolyField)
+    oper = op.operator in keys(OPDICT) ? OPDICT[op.operator] : op.operator
+    oper(polynize(op.left,f),polynize(op.right,g))
+end
 polynize(op::Operation,f::PolyField) = polynize(op,f,f)
 

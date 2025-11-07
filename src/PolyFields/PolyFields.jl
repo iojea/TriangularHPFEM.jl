@@ -2,7 +2,7 @@ module PolyFields
 
 using Polynomials
 using LinearAlgebra
-using TensorOperations
+using TensorCast
 using ..Meshes
 
 include("fields.jl")
@@ -14,11 +14,12 @@ include("show.jl")
 
 const ∇ = gradient
 const Δ = laplacian
+const ⊗ = _outer
 export PolyField
 export TensorPolynomial
 export PolyScalarField, PolyVectorField, PolyTensorField
 export PolySum
 export LegendreIterator,StandardBasis
-export gradient, divergence, laplacian,outer
+export gradient, divergence, laplacian,_outer
 
 end; #module

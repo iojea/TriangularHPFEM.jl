@@ -1,4 +1,4 @@
-function ref_integrate(p::TensorPolynomial{F,X,N,Y,M}) where {F,X,N,Y,M}
+function ref_integrate(p::TensorPolynomial{F,X,Y}) where {F,X,Y}
     (;px,py) = p
     qy = Polynomials.integrate(py)
     x = ImmutablePolynomial((zero(F),one(F)))
@@ -130,12 +130,10 @@ end
 function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure{M}) where {B,F,I,P,M<:HPMesh{F,I,P}}
     (;mesh,aux) = m
     degrees_of_freedom!(mesh)
-    tensors = Dict{NTuple{3,P},Array{F,2*B}}()
+    dims = len(B)+sum(B)
+    tensors = Dict{NTuple{3,P},Array{F,dims}}()
     (;trilist,DOFs) = mesh
     (;by_tri) = DOFs
-    for p in keys(by_tri)
-        
-    end
     ℓ = sum(x->length(x)^2,by_tri)
     J = Vector{Int32}(undef,ℓ)
     K = Vector{Int32}(undef,ℓ)

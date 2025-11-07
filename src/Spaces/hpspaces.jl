@@ -15,12 +15,9 @@ struct OperatorSpace{F<:Function,S<:AbstractSpace} <: AbstractSpace
 end
 
 
-gradient(s::StdScalarSpace) = OperatorSpace(gradient,s)
-divergence(s::StdVectorSpace) = OperatorSpace(divergence,s)
-laplacian(s::StdScalarSpace) = OperatorSpace(laplacian,s)
-
-polynize(::AbstractSpace,p::PolyField) = p
-polynize(op::OperatorSpace,p::PolyField) = op.operator(p)
+PolyFields.gradient(s::StdScalarSpace) = OperatorSpace(gradient,s)
+PolyFields.divergence(s::StdVectorSpace) = OperatorSpace(divergence,s)
+PolyFields.laplacian(s::StdScalarSpace) = OperatorSpace(laplacian,s)
 
 #spacetype(s::OperatorSpace{::Type{typeof(gradient),StdScalarSpace}}) = VectorSpace
 
@@ -71,6 +68,9 @@ combine(::Order{0},::Order{B}) where B = Order{B}()
 
 
 basis(::StdScalarSpace) = StandardBasis
+
+polynize(::AbstractSpace,p::PolyField) = p
+polynize(op::OperatorSpace,p::PolyField) = op.operator(p)
 
 # # Sintactic sugar
 
