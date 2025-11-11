@@ -88,9 +88,11 @@ function PolyTensorField{T,N}() where {N,T<:PolyScalarField}
     PolyTensorField(a)
 end
 
-
+# PolyVectorField
 const PolyVectorField{F,X,Y,T} = PolyTensorField{F,X,Y,T,1}
 PolyVectorField(x::AbstractArray{T,1}) where T = PolyTensorField(x)
+
+#PolyMatrixField
 const PolyMatrixField{F,X,Y,T} = PolyTensorField{F,X,Y,T,2}
 PolyMatrixField(x::AbstractArray{T,2}) where T = PolyTensorField(x)
 function (v::PolyTensorField{F,X,Y,T,N})(x,y) where {F,X,Y,T,N}
@@ -100,6 +102,8 @@ function (v::PolyTensorField{F,X,Y,T,N})(x,y) where {F,X,Y,T,N}
     end
     z
 end
+
+
 function (v::PolyTensorField{F,X,Y,T,N})(x) where {F,X,Y,T,N}
     v(x[1],x[2])
 end
@@ -109,7 +113,6 @@ Base.length(p::PolyTensorField) = length(p.tensor)
 Base.size(p::PolyTensorField) = size(p.tensor)
 Base.iterate(p::PolyTensorField,st=nothing) = iterate(p.tensor,st)
 Base.getindex(p::PolyTensorField,i) = getindex(p.tensor,i)
-
 
 Base.:*(a::Number,p::PolyTensorField) = PolyTensorField(a*p.tensor)
 Base.:*(p::PolyTensorField,a::Number) = a*p
@@ -123,26 +126,12 @@ function Base.:*(A::AbstractMatrix,p::PolyTensorField{F,X,Y,T,N}) where {F,X,Y,T
     c .= A*p.tensor
     length(c) == 1 ? c : PolyTensorField(c)
 end
+
 function Base.:*(p::PolyScalarField,v::T) where T<:PolyTensorField
     issubset(indeterminates(p),indeterminates(v)) || throw(ArgumentError("Fields have different indeterminates"))
     T(p .* v.tensor)
 end
-
-function Base.:*(p::AbstractPolynomial,v::T) where T<:PolyTensorField
-    indeterminate(p) in indeterminates(v) || throw(ArgumentError("Indeterminates does not match."))
-    PolyTensorField(p .* v.tensor)    
-end
-
-
-
-#_vector_polyvector(w,v) = w[1]*v[1] + w[2]*v[2]
-#_matrix_polyvector(w,v) = PolyVectorField(w[1,1]*v.s1+w[1,2]*v.s2,w[2,1]*v.s1+w[2,2]*v.s2)
-
-# function LinearAlgebra.dot(w::AbstractVector,v::PolyVectorField)
-#     length(w)!=2 && throw(ArgumentError("Vector must have length 2."))
-#     _vector_polyvector(w,v)
-# end
-# LinearAlgebra.dot(v::PolyVectorField,w::AbstractVector) = w⋅v
+Base.:*(v::T,p::PolyScalarField) where T<:PolyTensorField = p*v
 
 
 function _outer(p::PolyVectorField,q::PolyVectorField)
@@ -150,4 +139,13 @@ function _outer(p::PolyVectorField,q::PolyVectorField)
     PolyTensorField(a)
 end
 
-LinearAlgebra.dot(p::PolyVectorField,q::PolyVectorField) = p.tensor ⋅ q.tensor
+LinearAlgebra.dot(p::PolyVectorField,q::PolyVectorField) = dot(p.tensor,q.tensor)
+
+
+struct Field
+    op
+    args::Tuple
+end
+
+Base.:*(f::Function,p::PolyField) = Field(*,(f,p))
+

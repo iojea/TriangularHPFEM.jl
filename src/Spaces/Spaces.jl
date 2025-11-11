@@ -22,11 +22,9 @@ const ∫ = Integrand
 export TensorPolynomial
 export LegendreIterator
 export StandardBasis
-export PolySum
 export AbstractSpace
 export StdScalarSpace, StdVectorSpace, StdTensorSpace
 export ScalarSpace, VectorSpace, TensorSpace
-export polynize
 export basis
 export OperatorSpace
 export Integrand

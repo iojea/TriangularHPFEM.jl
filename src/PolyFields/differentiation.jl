@@ -50,10 +50,10 @@ function gradient(p::PolyScalarField{F,X,Y}) where {F,X,Y}
 end
 
 function divergence(v::PolyVectorField)
-    d1x = derivative(v.s1.px)
-    d2y = derivative(v.s2.py)
-    part1 = PolyScalarField(d1x,v.s1.py)
-    part2 = PolyScalarField(v.s2.px,d2y)
+    d1x = derivative(v[1].px)
+    d2y = derivative(v[2].py)
+    part1 = TensorPolynomial(d1x,v[1].py)
+    part2 = TensorPolynomial(v[2].px,d2y)
     PolySum(part1,part2)
 end
 

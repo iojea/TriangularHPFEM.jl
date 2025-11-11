@@ -19,17 +19,6 @@ PolyFields.gradient(s::StdScalarSpace) = OperatorSpace(gradient,s)
 PolyFields.divergence(s::StdVectorSpace) = OperatorSpace(divergence,s)
 PolyFields.laplacian(s::StdScalarSpace) = OperatorSpace(laplacian,s)
 
-#spacetype(s::OperatorSpace{::Type{typeof(gradient),StdScalarSpace}}) = VectorSpace
-
-# LinearAlgebra.dot()
-
-# Base.:*(a::ScalarHPSpace,b::AbstractHPSpace) = OperationField(*,(a,b))
-# Base.:*(m::Array,a::VectorHPSpace) = OperationField(*,(m,a))
-# Base.:*(f::Function,a::VectorHPSpace) = OperationField(*,(f,a))
-
-
-
-
 
 # A trait for identifying Constant Coefficients, which allow precomputation of local tensors.
 abstract type CoeffType end

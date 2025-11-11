@@ -1,20 +1,54 @@
-function ref_integrate(p::TensorPolynomial{F,X,Y}) where {F,X,Y}
-    (;px,py) = p
-    qy = Polynomials.integrate(py)
-    x = ImmutablePolynomial((zero(F),one(F)))
-    qx = px*(qy(x)-qy(-one(F)))
-    q = Polynomials.integrate(qx)
-    q(one(F))-q(-one(F))
+
+
+struct AffineTransformation{F}
+    A::MMatrix{F,2,2}
+    iA::MMatrix{F,2,2}
+    b::MVector{F,2}
+    jacobian::Base.RefValue{F}
+    function AffineTransformation{F}(A,b) where F<:Number
+        @assert size(A)==(2,2)
+        @assert size(b)==(2,)
+        new{F}(F.(A),F.(inv(A)),F.(b),Base.RefValue(abs(det(A))))
+    end
+end
+function AffineTransformation(A,b)
+    TA = eltype(A)
+    Tb = eltype(b)
+    T = promote_type(TA,Tb)
+    AffineTransformation{T}(A,b)
+end
+AffineTransformation{F}() where F = AffineTransformation(@MMatrix(zeros(F,2,2)),@MVector(zeros(F,2)))
+
+(aff::AffineTransformation)(x) = aff.A*x+aff.b
+
+function update!(aff::AffineTransformation,vert)
+    (;A,iA,b,jacobian) = aff
+    @views A[:, 1] .= 0.5(vert[3] - vert[2])
+    @views A[:, 2] .= 0.5(vert[1] - vert[2])
+    @views b .= 0.5(vert[1] + vert[3])
+    iA .= inv(A)
+    jacobian[] = abs(det(A))
 end
 
-ref_integrate(p::PolySum) = ref_integrate(p.left) + ref_integrate(p.right)
-# function ref_integrate(p::BivariatePolynomial{F,X,N,Y,M}) where {F,X,N,Y,M}
-#     x = ImmutablePolynomial((zero(F),one(F)),X)
-#     ip = integrate(p.p)
-#     q = ip(x) - ip(-one(F))
-#     iq = integrate(q)
-#     iq(one(F))-iq(-one(F))
-# end
+calc_vol(x,y,z) = 0.5abs(x[1]*(y[2]-z[2])+y[1]*(z[2]-x[2])+z[1]*(x[2]-y[2]))
+cal_vol(v::Vector) = calc_vol(v...)
+
+# A trait for evaluation of Field
+abstract type EvalType end
+struct Eval <: EvalType end
+struct Compose <: EvalType end
+struct Pass <: EvalType end
+
+evaltype(_) = Pass()
+evaltype(::Function) = Compose()
+evaltype(::PolyField) = Eval()
+
+evaluate(::Eval,f,x,t::AffineTransformation) = f(x)
+evaluate(::Field,f,x,t::AffineTransformation) = f(t(x))
+evaluate(::Pass,f,x,t) = f
+
+(o::Field)(x,t) = o.op((evaluate(evaltype(arg),arg,x,t) for arg in o.args)...)
+
 
 """
     integrate(fun, scheme)
@@ -34,6 +68,71 @@ coordinates each. In the second case, the matrix needs to have size
 If the vertices are omitted, the function is called with barycentric
 coordinates instead.
 """
+
+function ref_integrate(p::TensorPolynomial{F,X,Y}) where {F,X,Y}
+    (;px,py) = p
+    qy = Polynomials.integrate(py)
+    x = ImmutablePolynomial((zero(F),one(F)))
+    qx = px*(qy(x)-qy(-one(F)))
+    q = Polynomials.integrate(qx)
+    q(one(F))-q(-one(F))
+end
+
+ref_integrate(p::PolySum) = ref_integrate(p.left) + ref_integrate(p.right)
+
+
+collapser(::Type{Spaces.Order{(1,)}},aff::AffineTransformation) = aff.iA
+collapser(::Type{Spaces.Order{(1,1)}},aff::AffineTransformation) = aff.iA'*aff.iA
+
+function build_local_tensor(fun,p)
+    
+end
+
+
+function integrate(::Type{Spaces.Order{B}},fun::PolyField,m::Measure{M}) where {B,F,I,P,M<:HPMesh{F,I,P}}
+    (;mesh,aux) = m
+
+    degrees_of_freedom!(mesh)
+    dims = len(B)+sum(B)
+    if sum(B)>0
+        T = MArray{Tuple{2,2},F,2}()
+    end
+    tensors = Dict{NTuple{3,P},Array{F,dims}}()
+    (;points,trilist,DOFs) = mesh
+    (;by_tri) = DOFs
+    ℓ = sum(x->length(x)^2,by_tri)
+    J = Vector{Int32}(undef,ℓ)
+    K = Vector{Int32}(undef,ℓ)
+    V = Vector{Float64}(undef,ℓ)
+    affₜ = AffineTransform{F}()
+    r = 1
+    
+    @inbounds for t in triangles(trilist)
+        dofT = dof[t]
+        p, pnod = pnodes(t, mesh)
+        update!(affₜ, view(points, pnod))
+        if p in keys(tensors)
+            local_tensor = tensors[p]
+        else
+            local_tensor = build_local_tensor(fun,p)
+            tensors[p] = local_tensor
+        end
+            
+        v = zeros(dim, dim)
+        for j = 1:dim, i = 1:j
+            v[i, j] = S[i, j, :] ⋅ z
+        end
+        v = dAₜ * C' * Symmetric(v) * C
+        i = repeat(dofT, dim)
+        j = repeat(dofT, inner = dim)
+        J[r:r+dim^2-1] = i
+        K[r:r+dim^2-1] = j
+        V[r:r+dim^2-1] = v
+        r += dim^2
+    end
+    sparse(J, K, V)
+end
+
 
 @inbounds function ref_integrate(fun, scheme::QScheme{N,T}) where {N,T}
     @assert N > 0
@@ -55,33 +154,35 @@ coordinates instead.
     return 2s / factorial(N - 1)
 end
 
-@inbounds function integrate(fun, scheme::QScheme{N,T},
-                             vertices::SMatrix{D,N,U}) where {N,T,D,U}
-    @assert N > 0
-    @assert N >= D + 1
 
-    ws = scheme.weights
-    ps = scheme.points
-    @assert length(ws) == length(ps)
+### This function has a BUG! calc_vol is not defined. But for now we do not need this function.
+# @inbounds function integrate(fun, scheme::QScheme{N,T},
+#                              vertices::SMatrix{D,N,U}) where {N,T,D,U}
+#     @assert N > 0
+#     @assert N >= D + 1
 
-    p1 = ps[1]
-    x1 = (vertices * p1)::SVector{D}
-    X = typeof(x1)
-    R = typeof(ws[1] * fun(x1))
+#     ws = scheme.weights
+#     ps = scheme.points
+#     @assert length(ws) == length(ps)
 
-    s = zero(R)
-    @simd for i in 1:length(ws)
-        w = ws[i]
-        p = ps[i]
-        x = vertices * p
-        s += w * fun(x)
-    end
+#     p1 = ps[1]
+#     x1 = (vertices * p1)::SVector{D}
+#     X = typeof(x1)
+#     R = typeof(ws[1] * fun(x1))
 
-    # If `U` is an integer type, then Linearalgebra.det converts to
-    # floating-point values; we might want a different type
-    vol = R(calc_vol(vertices)) / factorial(N - 1)
-    return vol * s
-end
+#     s = zero(R)
+#     @simd for i in 1:length(ws)
+#         w = ws[i]
+#         p = ps[i]
+#         x = vertices * p
+#         s += w * fun(x)
+#     end
+
+#     # If `U` is an integer type, then Linearalgebra.det converts to
+#     # floating-point values; we might want a different type
+#     vol = R(calc_vol(vertices)) / factorial(N - 1)
+#     return vol * s
+# end
 function integrate(fun, scheme::QScheme, vertices::SMatrix)
     return error("Wrong dimension for vertices matrix")
 end
@@ -110,20 +211,6 @@ function integrate(kernel, scheme::QScheme{N},
     @assert N >= D + 1
     vertices′ = SMatrix{N,D}(vertices)'
     return integrate(kernel, scheme, vertices′)
-end
-
-
-function Base.:*(integrand::Integrand,m::Measure)
-    coefftype(integrand.op),order(integrand.op),integrand.op,m
-end
-
-function transform_matrix!(A, vert)
-    @views A[:, 1] .= 0.5(vert[:, 3] - vert[:, 2])
-    @views A[:, 2] .= 0.5(vert[:, 1] - vert[:, 2])
-end
-
-function transform_term!(b, vert)
-    @views b .= 0.5(vert[:, 1] + vert[:, 3])
 end
 
 
@@ -166,14 +253,3 @@ function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure
 end
     
 
-################################################################################
-
-
-
-#ref_integrate(op::OperationField) = _ref_integrate(op,FieldsType(op))
-# function _ref_integrate(p::OperationField)
-#     op = operation(p)
-#     op in (+,-) || throw(TypeError("Only operations + and - can be integrated."))
-#     q,r = arguments(p)
-#     op(ref_integrate(q),ref_integrate(r))
-# end

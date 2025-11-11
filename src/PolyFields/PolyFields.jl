@@ -18,8 +18,10 @@ const ⊗ = _outer
 export PolyField
 export TensorPolynomial
 export PolyScalarField, PolyVectorField, PolyTensorField
+export Field
 export PolySum
 export LegendreIterator,StandardBasis
 export gradient, divergence, laplacian,_outer
+export dot
 
 end; #module

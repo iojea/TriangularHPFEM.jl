@@ -46,6 +46,7 @@ include("Quadratures/Quadratures.jl")
 @publish PolyFields LegendreIterator
 @publish PolyFields StandardBasis
 @publish PolyFields _outer
+@publish PolyFields dot
 
 @publish Quadratures QScheme
 @publish Quadratures Measure
