@@ -6,6 +6,13 @@ abstract type PolyField{F,X,Y} <:Function end
 ###########################################################################
 #
 abstract type PolyScalarField{F,X,Y} <: PolyField{F,X,Y} end
+
+"""
+```
+    indeterminates(p::PolyField)
+```
+returns the indeterminates of `p`, for example `:x` and `:y`.
+"""
 indeterminate(::AbstractPolynomial{T,X}) where {T,X} = X
 indeterminates(::PolyField{F,X,Y}) where {F,X,Y} = (X,Y)
 Base.length(::PolyScalarField) = 1
@@ -80,6 +87,32 @@ end
 ###############################
 #       TENSOR FIELDS
 ###############################
+"""
+  ```
+     PolyTensorField{F,X,Y,T<:PolyScalarField{F,X,Y},N} <: PolyField{F,X,Y}
+  ```
+  A struct for storing a tensor-field formed by a `PolyScalarField` on each coefficient. `F` is the type of the coefficients of the polynomials, `X` and `Y` the indeterminates, `T` the type of the scalar fields stored in each component and `N` is the number of dimensions of the tensor. There are useful aliases:
+  - `PolyVectorField`, for vector fields, with `N=1` and
+  - `PolyMatrixField`, for matrix fields, with `N=2`.
+
+  For example, in the following code
+```
+  julia> p = TensorPolynomial((1,3.,4.),(1,2.))
+  julia> q = TensorPolynomial((0,1.),(1.))
+  julia> v = PolyTensorField([p,q])  
+```
+`v` is `PolyVectorField` with `T` given by `TensorPolynomial(Float64,:x,:y)`.
+
+If the type of the component fields is not uniform, they are promoted to a common type.
+
+```
+  julia> p = TensorPolynomial((1,3.,4.),(1,2.))
+  julia> q = TensorPolynomial((0,1.),(1.))
+  julia> r = p+q # PolySum
+  julia> v = PolyTensorField([p,r])  
+```
+produces a `PolyVectorField` with `T== PolyField{Float64,:x,:y}`.
+""" 
 struct PolyTensorField{F,X,Y,T<:PolyScalarField{F,X,Y},N} <: PolyField{F,X,Y}
     tensor::Array{T,N}
 end
