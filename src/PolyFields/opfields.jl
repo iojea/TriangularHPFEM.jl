@@ -1,3 +1,9 @@
+"""
+```
+   PolySum{F,X,Y} <: PolyScalarField{F,X,Y}
+```
+A struct for storing the sum of two `PolyScalarField`s. A typical application is the divergence of a `PolyVectorField`, usually formed by the sum of two `TensorPolynomial`s. Note that the terms of the sum can be any type of `PolyScalarField`, including `PolySum`s.
+"""
 struct PolySum{F,X,Y} <: PolyScalarField{F,X,Y}
     left::PolyScalarField{F,X,Y}
     right::PolyScalarField{F,X,Y}
