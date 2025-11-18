@@ -1,5 +1,9 @@
-
-
+"""
+```
+   AffineTransformation{F}
+```
+A struct for defining, and updating, an affine transformation from the reference triangle to some other triangle. 
+"""
 struct AffineTransformation{F}
     A::MMatrix{F,2,2}
     iA::MMatrix{F,2,2}
@@ -21,7 +25,13 @@ AffineTransformation{F}() where F = AffineTransformation(@MMatrix(zeros(F,2,2)),
 
 (aff::AffineTransformation)(x) = aff.A*x+aff.b
 
-function update!(aff::AffineTransformation,vert)
+"""
+```
+   affine!(aff::AffinetTransformation,vert) 
+```
+Updates the `AffineTransformation` `aff` so that it transforms the reference triangle into the trangle of vertices given by `vert`. `vert` should be a vector of points.
+"""
+function affine!(aff::AffineTransformation,vert)
     (;A,iA,b,jacobian) = aff
     @views A[:, 1] .= 0.5(vert[3] - vert[2])
     @views A[:, 2] .= 0.5(vert[1] - vert[2])
@@ -49,26 +59,12 @@ evaluate(::Pass,f,x,t) = f
 
 (o::Field)(x,t) = o.op((evaluate(evaltype(arg),arg,x,t) for arg in o.args)...)
 
-
 """
-    integrate(fun, scheme)
-    integrate(fun, scheme, vertices::AbstractVector)
-    integrate(fun, scheme, vertices::AbstractMatrix)
-
-# Arguments
-- `fun`: integrand, should accept an `SVector` as argument
-- `scheme`: quadrature scheme
-- `vertices`: vertices of the simplex
-
-The vertices need to be passed either as a vector-of-vectors or as a
-matrix. In the first case, there need to be `D+1` points with `D`
-coordinates each. In the second case, the matrix needs to have size
-`D`×`D+1`.
-
-If the vertices are omitted, the function is called with barycentric
-coordinates instead.
+```
+   ref_integrate(p::PolyScalarField)
+```
+Integrates `p` in the reference triangle 
 """
-
 function ref_integrate(p::TensorPolynomial{F,X,Y}) where {F,X,Y}
     (;px,py) = p
     qy = Polynomials.integrate(py)
@@ -84,7 +80,13 @@ ref_integrate(p::PolySum) = ref_integrate(p.left) + ref_integrate(p.right)
 collapser(::Type{Spaces.Order{(1,)}},aff::AffineTransformation) = aff.iA
 collapser(::Type{Spaces.Order{(1,1)}},aff::AffineTransformation) = aff.iA'*aff.iA
 
-function build_local_tensor(fun,p)
+function build_local_tensor(::Type{Spaces.Order{B}},space,fun,p) where B
+    base = basis(space)
+    N = length(base)
+    inner_dims = len(B)
+    outer_dims = sum(B)
+    dims = ((N for i in 1:inner_dims)...,(2 for _ in 1:sum(B))...)
+    local_tensor = FixedSizeArray{Float64}(undef,dims...)
     
 end
 

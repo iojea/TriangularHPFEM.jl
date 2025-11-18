@@ -10,6 +10,7 @@ struct HProblem{S<:AbstractSpace}
 end
 
 function HProblem(a,b,space,g)
+    mock = a(space,space)
     
 end
 

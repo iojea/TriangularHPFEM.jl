@@ -2,7 +2,7 @@
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "2cd2aefde9395cf498dec6e4fb4d16544b33472a"
+project_hash = "719819535718ad2bbe4a5eb1fa0667eef9169be7"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -125,6 +125,11 @@ weakdeps = ["SparseArrays"]
 
     [deps.ChainRulesCore.extensions]
     ChainRulesCoreSparseArraysExt = "SparseArrays"
+
+[[deps.Collects]]
+git-tree-sha1 = "6c973f8071ca1f39ce0ed20840f908a44575fa5e"
+uuid = "08986516-18db-4a8b-8eaa-f5ef1828d8f1"
+version = "1.0.0"
 
 [[deps.ColorBrewer]]
 deps = ["Colors", "JSON"]
@@ -355,6 +360,17 @@ deps = ["Statistics"]
 git-tree-sha1 = "05882d6995ae5c12bb5f36dd2ed3f61c98cbb172"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.5"
+
+[[deps.FixedSizeArrays]]
+deps = ["Collects"]
+git-tree-sha1 = "c17496e474024e0c2330b20447dc536c86930510"
+uuid = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
+version = "1.2.0"
+weakdeps = ["Adapt", "Random"]
+
+    [deps.FixedSizeArrays.extensions]
+    AdaptExt = "Adapt"
+    RandomExt = "Random"
 
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
@@ -1399,7 +1415,7 @@ uuid = "5639c1d2-226c-5e70-8d55-b3095415a16a"
 version = "1.6.2+0"
 
 [[deps.TriangularhpFEM]]
-deps = ["Dictionaries", "DocStringExtensions", "ExactPredicates", "LinearAlgebra", "Makie", "Markdown", "Pkg", "Polynomials", "Printf", "StaticArrays", "TensorCast", "Test", "Triangulate"]
+deps = ["Dictionaries", "DocStringExtensions", "ExactPredicates", "FixedSizeArrays", "LinearAlgebra", "Makie", "Markdown", "Pkg", "Polynomials", "Printf", "StaticArrays", "TensorCast", "Test", "Triangulate"]
 path = "."
 uuid = "563cddf2-6e0b-42e9-b4ef-ce1a8aa3ba4e"
 version = "1.0.0-DEV"
