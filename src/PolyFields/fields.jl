@@ -1,42 +1,46 @@
 abstract type PolyField{F,X,Y} <:Function end
+"""
 
+    indeterminates(p::PolyField)
+    
+returns the indeterminates of `p`, for example `:x` and `:y`.
+"""
+indeterminate(::AbstractPolynomial{T,X}) where {T,X} = X
+indeterminates(::PolyField{F,X,Y}) where {F,X,Y} = (X,Y)
 
 ###########################################################################
 #################              SCALAR FIELDS              #################
 ###########################################################################
 #
 abstract type PolyScalarField{F,X,Y} <: PolyField{F,X,Y} end
-
-"""
-```
-    indeterminates(p::PolyField)
-```
-returns the indeterminates of `p`, for example `:x` and `:y`.
-"""
-indeterminate(::AbstractPolynomial{T,X}) where {T,X} = X
-indeterminates(::PolyField{F,X,Y}) where {F,X,Y} = (X,Y)
 Base.length(::PolyScalarField) = 1
 # 
-
 _zerofill(t::NTuple{K,T},N) where {K,T} = K>=N ? t : (t...,zeros(T,N-K)...)
+
 ######################################
 ####      TensorPolynomial     ####
 ######################################
 """
+
+    TensorPolynomial{F,X,Y} <: PolySacalarField{F,X,Y}
+
+A 2-variate polynomial with coefficients of type `F` defined by the product of two univariate polynomials, one on variable `X` and the other on variable `Y`.
+
+For construction it is preferred to pass two tuples of coefficients.
+# Examples
 ```
     julia> ϕ = TensorPolynomial((2,1.,3.),(3.,2.))
+        (2.0 + 1.0*x + 3.0*x^2)(3.0 + 2.0*y)
     julia> ϕ(1,-1)
         6.0
     julia> ϕ([1,-1])
         6.0
 ```
-Defines a scalar field `ϕ:ℝ²→ℝ` given by a product of a polynomial in `x` and  a polynomial in `y`. In this case: `(2.0 + 1.0x + 3.0x²)(3.0+2.0y)`.
-
-The indeterminates can be specified:
+If necessary, the indeterminates can be specified:
 ```
     julia> ϕ = TensorPolynomial((2,1.,3.),(3.,2.),:z,:ξ)
+        (2.0 + 1.0*z + 3.0*z^2)(3.0 + 2.0*ξ)
 ```
-produces the same polynomials, but on the variables `(z,ξ)`. 
 """
 struct TensorPolynomial{F,X,Y} <: PolyScalarField{F,X,Y}
     px::ImmutablePolynomial{F,X,N} where N
@@ -88,19 +92,21 @@ end
 #       TENSOR FIELDS
 ###############################
 """
-  ```
+
      PolyTensorField{F,X,Y,T<:PolyScalarField{F,X,Y},N} <: PolyField{F,X,Y}
-  ```
-  A struct for storing a tensor-field formed by a `PolyScalarField` on each coefficient. `F` is the type of the coefficients of the polynomials, `X` and `Y` the indeterminates, `T` the type of the scalar fields stored in each component and `N` is the number of dimensions of the tensor. There are useful aliases:
+
+  A struct for storing a tensor-field  of `N` dimensions formed by a `PolyScalarField` of type `T` with coeffitients of type `F` on the indeterminates `X` and `Y`.   There are useful aliases:
   - `PolyVectorField`, for vector fields, with `N=1` and
   - `PolyMatrixField`, for matrix fields, with `N=2`.
 
-  For example, in the following code
+# Examples
+
 ```
   julia> p = TensorPolynomial((1,3.,4.),(1,2.))
-  julia> q = TensorPolynomial((0,1.),(1.))
+  julia> q = TensorPolynomial((0,1.),(1.,))
   julia> v = PolyTensorField([p,q])  
 ```
+
 `v` is `PolyVectorField` with `T` given by `TensorPolynomial(Float64,:x,:y)`.
 
 If the type of the component fields is not uniform, they are promoted to a common type.
@@ -109,9 +115,16 @@ If the type of the component fields is not uniform, they are promoted to a commo
   julia> p = TensorPolynomial((1,3.,4.),(1,2.))
   julia> q = TensorPolynomial((0,1.),(1.))
   julia> r = p+q # PolySum
-  julia> v = PolyTensorField([p,r])  
+  julia> v = PolyTensorField([p,r])
+    2-element Vector{TensorPolynomial{Float64, :x, :y}}:
+      (1.0 + 3.0*x + 4.0*x^2)(1.0 + 2.0*y)
+      (1.0*x)(1.0)
+
+  julia> v(1,-2)
+    2-element Vector{Float64}:
+      -24.0
+        1.0  
 ```
-produces a `PolyVectorField` with `T== PolyField{Float64,:x,:y}`.
 """ 
 struct PolyTensorField{F,X,Y,T<:PolyScalarField{F,X,Y},N} <: PolyField{F,X,Y}
     tensor::Array{T,N}
@@ -175,6 +188,73 @@ end
 LinearAlgebra.dot(p::PolyVectorField,q::PolyVectorField) = dot(p.tensor,q.tensor)
 
 
+###########################################################################################
+#########################           AffineTransformation        ###########################
+###########################################################################################
+"""
+
+    AffineTransformation{F}
+
+A struct for defining and updating an affine transformation from the reference triangle to some other triangle. 
+"""
+struct AffineTransformation{F}
+    A::MMatrix{F,2,2}
+    iA::MMatrix{F,2,2}
+    b::MVector{F,2}
+    jacobian::Base.RefValue{F}
+    function AffineTransformation{F}(A,b) where F<:Number
+        @assert size(A)==(2,2)
+        @assert size(b)==(2,)
+        new{F}(F.(A),F.(inv(A)),F.(b),Base.RefValue(abs(det(A))))
+    end
+end
+function AffineTransformation(A,b)
+    TA = eltype(A)
+    Tb = eltype(b)
+    T = promote_type(TA,Tb)
+    AffineTransformation{T}(A,b)
+end
+AffineTransformation{F}() where F = AffineTransformation(@MMatrix(zeros(F,2,2)),@MVector(zeros(F,2)))
+
+(aff::AffineTransformation)(x) = aff.A*x+aff.b
+
+"""
+```
+   affine!(aff::AffinetTransformation,vert) 
+```
+Updates the `AffineTransformation` `aff` so that it transforms the reference triangle into the trangle of vertices given by `vert`. `vert` should be a vector of points.
+"""
+function affine!(aff::AffineTransformation,vert)
+    (;A,iA,b,jacobian) = aff
+    @views A[:, 1] .= 0.5(vert[3] - vert[2])
+    @views A[:, 2] .= 0.5(vert[1] - vert[2])
+    @views b .= 0.5(vert[1] + vert[3])
+    iA .= inv(A)
+    jacobian[] = abs(det(A))
+end
+
+jac(aff::AffineTransformation) = aff.jacobian[]
+area(x,y,z) = 0.5abs(x[1]*(y[2]-z[2])+y[1]*(z[2]-x[2])+z[1]*(x[2]-y[2]))
+area(v::Vector) = area(v...)
+area(t::AffineTransformation) = jac(t)/2
+
+
+##########################################################################################
+###################                FIELD                 #################################
+##########################################################################################
+"""
+
+    Field
+    
+A `struct` for defining fields that mix user defined functions with `PolyField`s.
+
+`Field`s are necessary for properly distinguish the method of integration.
+
+Consider, for example, the form `a(u,v) = ∫(∇(u)⋅∇(v)*dΩ`. In order to assembly the associated matrix, local terms can be fully pre-computed on the reference triangle, and then just transform into each mesh triangle. Note that only **one** local tensor is computed for each combination of degrees, so this precomputation is very fast when certain combination of degrees are repeated along the mesh. When applied to elements of a basis, `∇(u)⋅∇(v)` produces a `PolyScalarField` that can be directly integrated. 
+
+On the other hand, the precomputation cannot be carried out in the same way for `b(v) = ∫(f*v)*dΩ` with `f` a function, since `f` takes different values on each mesh triangle. Hence `f*v` produces a `Field` which integrates differently. In particular, it evaluates differently for integration.
+
+"""
 struct Field
     op
     args::Tuple
@@ -182,3 +262,18 @@ end
 
 Base.:*(f::Function,p::PolyField) = Field(*,(f,p))
 
+# A trait for evaluation of Field
+abstract type EvalType end
+struct Eval <: EvalType end
+struct Compose <: EvalType end
+struct Pass <: EvalType end
+
+evaltype(_) = Pass()
+evaltype(::Function) = Compose()
+evaltype(::PolyField) = Eval()
+
+evaluate(::Eval,f,x,t::AffineTransformation) = f(x)
+evaluate(::Field,f,x,t::AffineTransformation) = f(t(x))
+evaluate(::Pass,f,x,t) = f
+
+(o::Field)(x,t) = o.op((evaluate(evaltype(arg),arg,x,t) for arg in o.args)...)

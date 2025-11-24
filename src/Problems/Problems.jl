@@ -1,20 +1,13 @@
-module Porblems
+module Problems
 
 using CommonSolve
+using ..Spaces
+using ..Quadratures
 
-struct HProblem{S<:AbstractSpace}
-    a
-    b
-    space::S
-    g
-end
+include("feproblem.jl")
 
-function HProblem(a,b,space,g)
-    mock = a(space,space)
-    
-end
 
-function CommonSolve.solve(prob::HProblem)
-    
-end
+export FEProblem
+
+
 end; #module

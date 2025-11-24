@@ -2,7 +2,7 @@
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "719819535718ad2bbe4a5eb1fa0667eef9169be7"
+project_hash = "7e9c1439ba34a8f30022d2526b2e7b0278e9977f"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -168,6 +168,11 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
+
+[[deps.CommonSolve]]
+git-tree-sha1 = "0eee5eb66b1cf62cd6ad1b460238e60e4b09400c"
+uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
+version = "0.2.4"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
@@ -574,13 +579,12 @@ version = "1.0.2"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.IntervalSets]]
-git-tree-sha1 = "03b4f40b4987baa6a653a21f6f33f902af6255f3"
+git-tree-sha1 = "d966f85b3b7a8e49d034d27a189e9a4874b4391a"
 uuid = "8197267c-284f-5f27-9208-e0e47529a953"
-version = "0.7.12"
-weakdeps = ["Printf", "Random", "RecipesBase", "Statistics"]
+version = "0.7.13"
+weakdeps = ["Random", "RecipesBase", "Statistics"]
 
     [deps.IntervalSets.extensions]
-    IntervalSetsPrintfExt = "Printf"
     IntervalSetsRandomExt = "Random"
     IntervalSetsRecipesBaseExt = "RecipesBase"
     IntervalSetsStatisticsExt = "Statistics"
@@ -674,6 +678,15 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "eb62a3deb62fc6d8822c0c4bef73e4412419c5d8"
 uuid = "1d63c593-3942-5779-bab2-d838dc0a180e"
 version = "18.1.8+0"
+
+[[deps.LRUCache]]
+git-tree-sha1 = "5519b95a490ff5fe629c4a7aa3b3dfc9160498b3"
+uuid = "8ac3fa9e-de4c-5943-b1dc-09c6b5f20637"
+version = "1.6.2"
+weakdeps = ["Serialization"]
+
+    [deps.LRUCache.extensions]
+    SerializationExt = ["Serialization"]
 
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1386,6 +1399,23 @@ git-tree-sha1 = "1feb45f88d133a655e001435632f019a9a1bcdb6"
 uuid = "62fd8b95-f654-4bbd-a8a5-9c27f68ccd50"
 version = "0.1.1"
 
+[[deps.TensorOperations]]
+deps = ["LRUCache", "LinearAlgebra", "PackageExtensionCompat", "PrecompileTools", "Preferences", "PtrArrays", "Strided", "StridedViews", "TupleTools", "VectorInterface"]
+git-tree-sha1 = "874d1dfcb9f444c750928cf4e4556098c05f88c5"
+uuid = "6aa20fa7-93e2-5fca-9bc0-fbd0db3c71a2"
+version = "5.3.1"
+
+    [deps.TensorOperations.extensions]
+    TensorOperationsBumperExt = "Bumper"
+    TensorOperationsChainRulesCoreExt = "ChainRulesCore"
+    TensorOperationscuTENSORExt = ["cuTENSOR", "CUDA"]
+
+    [deps.TensorOperations.weakdeps]
+    Bumper = "8ce10254-0962-460f-a3d8-1f77fea1446e"
+    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    cuTENSOR = "011b41b2-24ef-40a8-b3eb-fa098493e9e1"
+
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -1415,7 +1445,7 @@ uuid = "5639c1d2-226c-5e70-8d55-b3095415a16a"
 version = "1.6.2+0"
 
 [[deps.TriangularhpFEM]]
-deps = ["Dictionaries", "DocStringExtensions", "ExactPredicates", "FixedSizeArrays", "LinearAlgebra", "Makie", "Markdown", "Pkg", "Polynomials", "Printf", "StaticArrays", "TensorCast", "Test", "Triangulate"]
+deps = ["CommonSolve", "Dictionaries", "DocStringExtensions", "ExactPredicates", "FixedSizeArrays", "LinearAlgebra", "Makie", "Markdown", "Pkg", "Polynomials", "Printf", "StaticArrays", "TensorCast", "TensorOperations", "Test", "Triangulate"]
 path = "."
 uuid = "563cddf2-6e0b-42e9-b4ef-ce1a8aa3ba4e"
 version = "1.0.0-DEV"
@@ -1476,6 +1506,12 @@ version = "1.25.1"
     LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
     Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
     Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.VectorInterface]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "9166406dedd38c111a6574e9814be83d267f8aec"
+uuid = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
+version = "0.5.0"
 
 [[deps.WebP]]
 deps = ["CEnum", "ColorTypes", "FileIO", "FixedPointNumbers", "ImageCore", "libwebp_jll"]

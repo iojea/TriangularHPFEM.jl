@@ -1,69 +1,9 @@
 """
-```
-   AffineTransformation{F}
-```
-A struct for defining, and updating, an affine transformation from the reference triangle to some other triangle. 
-"""
-struct AffineTransformation{F}
-    A::MMatrix{F,2,2}
-    iA::MMatrix{F,2,2}
-    b::MVector{F,2}
-    jacobian::Base.RefValue{F}
-    function AffineTransformation{F}(A,b) where F<:Number
-        @assert size(A)==(2,2)
-        @assert size(b)==(2,)
-        new{F}(F.(A),F.(inv(A)),F.(b),Base.RefValue(abs(det(A))))
-    end
-end
-function AffineTransformation(A,b)
-    TA = eltype(A)
-    Tb = eltype(b)
-    T = promote_type(TA,Tb)
-    AffineTransformation{T}(A,b)
-end
-AffineTransformation{F}() where F = AffineTransformation(@MMatrix(zeros(F,2,2)),@MVector(zeros(F,2)))
 
-(aff::AffineTransformation)(x) = aff.A*x+aff.b
+    ref_integrate(p::PolyScalarField)
 
-"""
-```
-   affine!(aff::AffinetTransformation,vert) 
-```
-Updates the `AffineTransformation` `aff` so that it transforms the reference triangle into the trangle of vertices given by `vert`. `vert` should be a vector of points.
-"""
-function affine!(aff::AffineTransformation,vert)
-    (;A,iA,b,jacobian) = aff
-    @views A[:, 1] .= 0.5(vert[3] - vert[2])
-    @views A[:, 2] .= 0.5(vert[1] - vert[2])
-    @views b .= 0.5(vert[1] + vert[3])
-    iA .= inv(A)
-    jacobian[] = abs(det(A))
-end
-
-calc_vol(x,y,z) = 0.5abs(x[1]*(y[2]-z[2])+y[1]*(z[2]-x[2])+z[1]*(x[2]-y[2]))
-cal_vol(v::Vector) = calc_vol(v...)
-
-# A trait for evaluation of Field
-abstract type EvalType end
-struct Eval <: EvalType end
-struct Compose <: EvalType end
-struct Pass <: EvalType end
-
-evaltype(_) = Pass()
-evaltype(::Function) = Compose()
-evaltype(::PolyField) = Eval()
-
-evaluate(::Eval,f,x,t::AffineTransformation) = f(x)
-evaluate(::Field,f,x,t::AffineTransformation) = f(t(x))
-evaluate(::Pass,f,x,t) = f
-
-(o::Field)(x,t) = o.op((evaluate(evaltype(arg),arg,x,t) for arg in o.args)...)
-
-"""
-```
-   ref_integrate(p::PolyScalarField)
-```
-Integrates `p` in the reference triangle 
+Integrates `p` in the reference triangle. The integration is performed exactly, with no quadratures. 
+using Base: MethodSpecializations
 """
 function ref_integrate(p::TensorPolynomial{F,X,Y}) where {F,X,Y}
     (;px,py) = p
@@ -73,27 +13,92 @@ function ref_integrate(p::TensorPolynomial{F,X,Y}) where {F,X,Y}
     q = Polynomials.integrate(qx)
     q(one(F))-q(-one(F))
 end
-
 ref_integrate(p::PolySum) = ref_integrate(p.left) + ref_integrate(p.right)
 
 
-collapser(::Type{Spaces.Order{(1,)}},aff::AffineTransformation) = aff.iA
-collapser(::Type{Spaces.Order{(1,1)}},aff::AffineTransformation) = aff.iA'*aff.iA
+collapser(::Order{(0,0)},aff::AffineTransformation) = I(2)
+collapser(::Order{(1,0)},aff::AffineTransformation) = aff.iA
+collapser(::Order{(1,1)},aff::AffineTransformation) = aff.iA'*aff.iA
 
-function build_local_tensor(::Type{Spaces.Order{B}},space,fun,p) where B
+function _initvectors(I,F,ℓ)
+    ivec = FixedSizeArray{I,1}(undef,ℓ)
+    fill!(ivec,zero(I))
+    jvec = FixedSizeArray{I,1}(undef,ℓ)
+    fill!(jvec,zero(I))
+    vals = FizedSizeArray{F,1}(undef,ℓ)
+    fill!(vals,zero(F))
+    ivec,jvec,vals
+end
+
+function integrate(::Val{2},form::Form,space::Spaces.AbstractSpace)
+    (;integrands,measures) = form
+    mesh = domainmesh(first(measures))
+    println(typeof(mesh))
+    F = floattype(mesh)
+    Itype = inttype(mesh)
+    N = degrees_of_freedom!(mesh)
+    ℓ = sum(Base.Fix{2}(^,2)∘length,tridofs(mesh))
+    ivec,jvec,vals = _initvectors(Itype,F,ℓ)
+    for (fun,measure) in zip(integrands,measures)
+         buildmatrix!(ivec,jvec,vals,fun,measure,space,order(fun(space,space)))
+    end
+    sparse(ivec,jvec,vals,N,N)
+end
+
+function buildmatrix!(ivec,jvec,vals,fun,measure,space,::Order{B}) where B
+    (;aux,mesh) = measure
+    (;points,trilist,dofs) = mesh
+    (;by_tri) = dofs
+    F = eltype(vals)
+    Itype = eltype(ivec)
+    tensordict = Dictionary{NTuple{3,Itype},FizedSizeArray{F,2+sum(B)}}()
+    aff = AffineTransformation{F}()
+    Ascale = collapser(aff);
+    r = 1
+    for tri in trilist
+        p,_ = pnodes(tri,mesh)
+        isin,token = gettoken(tensordict,p)
+        if isin
+            loctensor = gettokenvalue(tensordict,token)
+        else
+            loctensor = build_local_tensor(Val(2),fun,p,space)
+            set!(tensordict,p,loctensor)
+        end
+        affine!(aff,points[tri])
+        doft = by_tri[tri]
+        dim = length(doft)
+        C = aux[p].C
+        @tensor v[i,j] := loctensor[i,j,k,l]*Ascale[k,l]
+        v .= jac(aff)*C'*v*C
+        ivec[r:r+dim^2-1] .+= repeat(doft,dim)
+        jvec[r:r+dim^2-1] .+= repeat(doft,inner=dim)
+        vals[r:r+dim^2-1] .+= v[:]
+        r += dim^2
+    end
+end
+
+function build_local_tensor(::Val{2},order::Order{B},space,fun::PolyField,p) where B
     base = basis(space)
     N = length(base)
-    inner_dims = len(B)
+    inner_dims = length(B)
     outer_dims = sum(B)
-    dims = ((N for i in 1:inner_dims)...,(2 for _ in 1:sum(B))...)
+    dims = ((N for _ in 1:inner_dims)...,(2 for _ in 1:outer_dims)...)
     local_tensor = FixedSizeArray{Float64}(undef,dims...)
-    
+    for (i,φᵢ) in enumerate(base(p))
+        for (j,φⱼ) in enumerate(base(p))
+            local_tensor[i,j] = ref_integrate(fun(φᵢ,φⱼ))
+        end
+    end
+    return local_tensor
 end
 
 
+##########################################################
+##########################################################
+##########################################################
+##########################################################
 function integrate(::Type{Spaces.Order{B}},fun::PolyField,m::Measure{M}) where {B,F,I,P,M<:HPMesh{F,I,P}}
     (;mesh,aux) = m
-
     degrees_of_freedom!(mesh)
     dims = len(B)+sum(B)
     if sum(B)>0
@@ -106,7 +111,7 @@ function integrate(::Type{Spaces.Order{B}},fun::PolyField,m::Measure{M}) where {
     J = Vector{Int32}(undef,ℓ)
     K = Vector{Int32}(undef,ℓ)
     V = Vector{Float64}(undef,ℓ)
-    affₜ = AffineTransform{F}()
+    affₜ = AffineTransformation{F}()
     r = 1
     
     @inbounds for t in triangles(trilist)
@@ -216,42 +221,42 @@ function integrate(kernel, scheme::QScheme{N},
 end
 
 
-function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure{M}) where {B,F,I,P,M<:HPMesh{F,I,P}}
-    (;mesh,aux) = m
-    degrees_of_freedom!(mesh)
-    dims = len(B)+sum(B)
-    tensors = Dict{NTuple{3,P},Array{F,dims}}()
-    (;trilist,DOFs) = mesh
-    (;by_tri) = DOFs
-    ℓ = sum(x->length(x)^2,by_tri)
-    J = Vector{Int32}(undef,ℓ)
-    K = Vector{Int32}(undef,ℓ)
-    V = Vector{Float64}(undef,ℓ)
-    Aₜ = MMatrix{2,2}(zeros(2,2))
-    iAₜ = MMatrix{2,2}(zeros(2,2))
+# function integrate(::Type{Spaces.Constant},::Type{Spaces.Order{B}},op,m::Measure{M}) where {B,F,I,P,M<:HPMesh{F,I,P}}
+#     (;mesh,aux) = m
+#     degrees_of_freedom!(mesh)
+#     dims = len(B)+sum(B)
+#     tensors = Dict{NTuple{3,P},Array{F,dims}}()
+#     (;trilist,DOFs) = mesh
+#     (;by_tri) = DOFs
+#     ℓ = sum(x->length(x)^2,by_tri)
+#     J = Vector{Int32}(undef,ℓ)
+#     K = Vector{Int32}(undef,ℓ)
+#     V = Vector{Float64}(undef,ℓ)
+#     Aₜ = MMatrix{2,2}(zeros(2,2))
+#     iAₜ = MMatrix{2,2}(zeros(2,2))
     
-    r = 1
-    @inbounds for t in triangles(trilist)
-        dofT = dof[t]
-        p, pnod = pnodes(t, mesh)
-        transform_matrix!(Aₜ, view(points, :, pnod))
-        iAₜ .= inv(Aₜ)
-        iAₜ .= iAₜ * iAₜ'
-        z = vec(iAₜ)
-        dAₜ = abs(det(Aₜ))
-        v = zeros(dim, dim)
-        for j = 1:dim, i = 1:j
-            v[i, j] = S[i, j, :] ⋅ z
-        end
-        v = dAₜ * C' * Symmetric(v) * C
-        i = repeat(dofT, dim)
-        j = repeat(dofT, inner = dim)
-        J[r:r+dim^2-1] = i
-        K[r:r+dim^2-1] = j
-        V[r:r+dim^2-1] = v
-        r += dim^2
-    end
-    sparse(J, K, V)
-end
+#     r = 1
+#     @inbounds for t in triangles(trilist)
+#         dofT = dof[t]
+#         p, pnod = pnodes(t, mesh)
+#         transform_matrix!(Aₜ, view(points, :, pnod))
+#         iAₜ .= inv(Aₜ)
+#         iAₜ .= iAₜ * iAₜ'
+#         z = vec(iAₜ)
+#         dAₜ = abs(det(Aₜ))
+#         v = zeros(dim, dim)
+#         for j = 1:dim, i = 1:j
+#             v[i, j] = S[i, j, :] ⋅ z
+#         end
+#         v = dAₜ * C' * Symmetric(v) * C
+#         i = repeat(dofT, dim)
+#         j = repeat(dofT, inner = dim)
+#         J[r:r+dim^2-1] = i
+#         K[r:r+dim^2-1] = j
+#         V[r:r+dim^2-1] = v
+#         r += dim^2
+#     end
+#     sparse(J, K, V)
+# end
     
 

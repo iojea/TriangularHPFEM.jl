@@ -39,6 +39,7 @@ function triangle(::Type{I},t,p::AbstractMatrix) where {I}
 end
 
 
+
 # Properties
 
 """

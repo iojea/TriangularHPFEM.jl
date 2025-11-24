@@ -17,7 +17,7 @@ Base.:*(a::Sp,b::Function) = Operation(*,a,b)
 LinearAlgebra.dot(a::AbstractArray,op::Sp) = Operation(dot,a,op)
 LinearAlgebra.dot(a::Sp,b::Sp) = Operation(dot,a,b)
 
-coefftype(op::Operation) = promote_type(coefftype(op.left),coefftype(op.right))
+#coefftype(op::Operation) = promote_type(coefftype(op.left),coefftype(op.right))
 
 order(op::Operation) = combine(order(op.left),order(op.right))
 

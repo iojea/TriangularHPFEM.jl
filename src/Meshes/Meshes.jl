@@ -15,6 +15,10 @@ export HPTriangulation,HPPoint,HPEdge,HPTriangle,HPMesh
 export degrees,psortperm,edges,pnodes,pedges,triangles,edges,degree
 export meshhp,circmesh,circmesh_graded_center,rectmesh
 export show, plothpmesh, animate_refinement
+export domainmesh
+export degrees_of_freedom!
+export inttype, floattype, degtype
+export tridofs
 
 
 include("tuplehp.jl")
@@ -22,6 +26,7 @@ include("point.jl")
 include("edge.jl")
 include("triangle.jl")
 include("mesh.jl")
+include("boundary_mesh.jl")
 include("refine.jl")
 include("show.jl")
 include("plots.jl")

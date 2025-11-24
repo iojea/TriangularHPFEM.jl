@@ -2,19 +2,21 @@ const TriangleList{I,P,F} = Dictionary{HPTriangle{I},TriangleProperties{P,F}} wh
 const EdgeList{I,P} = Dictionary{HPEdge{I},EdgeProperties{P,Bool}} where {I,P}
 #const AuxList{P,N,F} = Dictionary{NTuple{3,P},AuxData{N,F}} where {P,N,F}
 
+
 abstract type HPTriangulation end
 
 struct DOFs{I<:Integer}
+    n::Base.RefValue{I}
     by_edge::Dictionary{HPEdge{I}, SArray{S,I, 1} where S<:Tuple}
-    by_tri::Dictionary{HPEdge{I}, MArray{S,I, 1} where S<:Tuple} 
+    by_tri::Dictionary{HPTriangle{I}, MArray{S,I, 1} where S<:Tuple} 
 end
 
 #DOFs(::Type{I}) where I<:Integer = DOFs(Dictionary{HPEdge{I},SArray{S,I,1} where S<:Tuple}(),Dictionary{HPTriangle{I},MArray{S,I,1} where S<:Tuple}())
 
 function DOFs(::Type{I}) where I<:Integer
     by_edge = Dictionary{HPEdge{I},SArray{S,I,1} where S<:Tuple}()
-    by_tri= Dictionary{HPEdge{I}, MArray{S,I, 1} where S<:Tuple}()
-    DOFs{I}(by_edge,by_tri)
+    by_tri= Dictionary{HPTriangle{I}, MArray{S,I, 1} where S<:Tuple}()
+    DOFs{I}(Base.RefValue{I}(zero(I)),by_edge,by_tri)
 end
 
 """
@@ -58,6 +60,10 @@ function HPMesh{F,I,P}(tri::TriangulateIO) where {F,I,P}
     HPMesh(points,triangles,edges)
 end
 
+degtype(::HPMesh{F,I,P}) where {F,I,P} = P
+inttype(::HPMesh{F,I,P}) where {F,I,P} = I
+floattype(::HPMesh{F,I,P}) where {F,I,P} = F
+
 function Base.copy(mesh::HPMesh)
     HPMesh(deepcopy(mesh.points),deepcopy(mesh.trilist),deepcopy(mesh.edgelist))
 end
@@ -66,7 +72,7 @@ end
 @inline triangles(list::T) where T<:TriangleList = keys(list)
 @inline edges(mesh::T) where T<:HPMesh = keys(mesh.edgelist)
 @inline triangles(mesh::T) where T<:HPMesh = keys(mesh.trilist) 
-
+@inline tridofs(mesh) = mesh.dofs.by_tri
 
 
 @inline isgreen(t::HPTriangle,m::HPMesh) = m.trilist[t].refine[] == 1
@@ -244,7 +250,7 @@ function degrees_of_freedom_by_edge!(mesh::HPMesh{F,I,P}) where {F,I,P}
     end
 end
 """
-    degrees_of_freedom(mesh::HPMesh{F,I,P}) where {F,I,P}
+    degrees_of_freedom!(mesh::HPMesh{F,I,P}) where {F,I,P}
 
 Creates a dictionary (from `Dictionaries.jl`) where the keys are the triangles of the mesh and the values are vectores storing the indices of the corresponding degrees of freedom. 
 
@@ -252,11 +258,11 @@ Internally, `degrees_of_freedom_by_edge` is called in order to obtain the nodal 
 
 If a dictionary of degrees of freedom by edge has already been computed, it is recommended to run: 
 
-    degrees_of_freedom(mesh::HPMesh{F,I,P},by_edge::Dictionary{HPEdge{I},Vector{I}}) where {F,I,P}
+    degrees_of_freedom!(mesh::HPMesh{F,I,P},by_edge::Dictionary{HPEdge{I},Vector{I}}) where {F,I,P}
 """
 function degrees_of_freedom!(mesh::HPMesh{F,I,P}) where {F,I,P}
     (;edgelist,trilist,dofs) = mesh
-    (;by_edge,by_tri) = dofs
+    (;n,by_edge,by_tri) = dofs
     if isempty(by_edge)
         degrees_of_freedom_by_edge!(mesh)
     end
@@ -266,7 +272,6 @@ function degrees_of_freedom!(mesh::HPMesh{F,I,P}) where {F,I,P}
         newdofs = @MVector zeros(I,compute_dimension(p))
         set!(by_tri,t,newdofs)
         j = 1 #counter of dof in current triangle
-        println(t_edges)
         @inbounds for i in 1:3
             newdof = by_edge[t_edges[i]]
             if  same_order(t_edges[i],edgelist)
@@ -279,6 +284,7 @@ function degrees_of_freedom!(mesh::HPMesh{F,I,P}) where {F,I,P}
         newdofs[j:end] = k:k+(length(newdofs)-j)
         k += length(newdofs)-j + 1
     end
+    n[] = k-1
 end
 
 

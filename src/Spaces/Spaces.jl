@@ -17,20 +17,18 @@ include("operation.jl")
 
 
 
-const ∫ = Integrand
 #export BasisIterator,StdScalarSpace,GradientSpace
-export TensorPolynomial
-export LegendreIterator
-export StandardBasis
+# export TensorPolynomial
+# export LegendreIterator
+# export StandardBasis
 export AbstractSpace
 export StdScalarSpace, StdVectorSpace, StdTensorSpace
 export ScalarSpace, VectorSpace, TensorSpace
 export basis
 export OperatorSpace
-export Integrand
-export ∫
-#export gradient,divergence,laplacian
-export coefftype
+export gradient,divergence,laplacian
 export dot
+export Order
 export order
+
 end; #module

@@ -50,3 +50,7 @@ function Base.show(io::IO,mimetype::MIME"text/plain", p::P) where P<:TensorPolyn
     printpoly(io,p.py,mimetype)
     print(io,")")
 end
+
+function Base.show(io::IO,mimetype::MIME"text/plain",p::P) where P<:PolyTensorField
+    show(io,mimetype,p.tensor)
+end

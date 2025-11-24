@@ -1,5 +1,6 @@
 module PolyFields
 
+using StaticArrays
 using Polynomials
 using LinearAlgebra
 using TensorCast
@@ -14,7 +15,7 @@ include("show.jl")
 
 const ∇ = gradient
 const Δ = laplacian
-const ⊗ = _outer
+#const ⊗ = _outer
 export PolyField
 export TensorPolynomial
 export PolyScalarField, PolyVectorField, PolyTensorField
@@ -23,5 +24,11 @@ export PolySum
 export LegendreIterator,StandardBasis
 export gradient, divergence, laplacian,_outer
 export dot
+export AffineTransformation
+export affine!
+export jac
+export area
+export EvalType,Eval,Compose,Pass
+export evaluate
 
 end; #module

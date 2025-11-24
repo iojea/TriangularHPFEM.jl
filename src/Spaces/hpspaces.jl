@@ -19,28 +19,6 @@ PolyFields.gradient(s::StdScalarSpace) = OperatorSpace(gradient,s)
 PolyFields.divergence(s::StdVectorSpace) = OperatorSpace(divergence,s)
 PolyFields.laplacian(s::StdScalarSpace) = OperatorSpace(laplacian,s)
 
-
-# A trait for identifying Constant Coefficients, which allow precomputation of local tensors.
-abstract type CoeffType end
-
-struct Constant <: CoeffType end
-struct Variable <: CoeffType end
-
-coefftype(::AbstractSpace) = Constant
-coefftype(::AbstractArray) = Constant
-coefftype(::Number) = Constant
-
-coefftype(::Function) = Variable
-
-Base.promote_type(::Union{Constant,Type{Constant}},::Union{Variable,Type{Variable}}) = Variable
-Base.promote_type(::Union{Constant,Type{Constant}},::Union{Constant,Type{Constant}}) = Constant
-Base.promote_type(::Union{Variable,Type{Variable}},::Union{Constant,Type{Constant}}) = Variable
-Base.promote_type(::Union{Constant,Type{Constant}},::Union{Nothing,Type{Nothing}}) = Constant
-Base.promote_type(::Union{Nothing,Type{Nothing}},::Union{Constant,Type{Constant}}) = Constant
-Base.promote_type(::Union{Nothing,Type{Nothing}},::Union{Variable,Type{Variable}}) = Variable
-Base.promote_type(::Union{Variable,Type{Variable}},::Union{Nothing,Type{Nothing}}) = Variable
-
-
 struct Order{B} end
 
 order(::Number) = Order{0}()
@@ -58,14 +36,33 @@ combine(::Order{0},::Order{B}) where B = Order{B}()
 
 basis(::StdScalarSpace) = StandardBasis
 
-polynize(::AbstractSpace,p::PolyField) = p
-polynize(op::OperatorSpace,p::PolyField) = op.operator(p)
-
 # # Sintactic sugar
 
-struct Integrand
-    op
-end
+#struct Integrand
+#    op
+#end
+
+# A trait for identifying Constant Coefficients, which allow precomputation of local tensors.
+# abstract type CoeffType end
+
+# struct Constant <: CoeffType end
+# struct Variable <: CoeffType end
+
+# coefftype(::AbstractSpace) = Constant
+# coefftype(::AbstractArray) = Constant
+# coefftype(::Number) = Constant
+
+# coefftype(::Function) = Variable
+
+# Base.promote_type(::Union{Constant,Type{Constant}},::Union{Variable,Type{Variable}}) = Variable
+# Base.promote_type(::Union{Constant,Type{Constant}},::Union{Constant,Type{Constant}}) = Constant
+# Base.promote_type(::Union{Variable,Type{Variable}},::Union{Constant,Type{Constant}}) = Variable
+# Base.promote_type(::Union{Constant,Type{Constant}},::Union{Nothing,Type{Nothing}}) = Constant
+# Base.promote_type(::Union{Nothing,Type{Nothing}},::Union{Constant,Type{Constant}}) = Constant
+# Base.promote_type(::Union{Nothing,Type{Nothing}},::Union{Variable,Type{Variable}}) = Variable
+# Base.promote_type(::Union{Variable,Type{Variable}},::Union{Nothing,Type{Nothing}}) = Variable
+
+
 #Integrand(op) = Integrand()
 
 # Base.:*(f::Integrand,m::Measure) = integrate(CoeffType(f.op),f.op,m)

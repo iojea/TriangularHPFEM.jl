@@ -7,6 +7,9 @@ using LinearAlgebra
 using StaticArrays
 using Dictionaries
 using Polynomials
+using SparseArrays
+using FixedSizeArrays
+using TensorOperations
 using ..Meshes
 using ..PolyFields
 using ..Spaces
@@ -15,12 +18,15 @@ include("auxiliarydata.jl")
 include("refelement.jl")
 include("gmquads.jl")
 include("measures.jl")
+include("forms.jl")
 include("integration.jl")
 
 export QScheme, Measure, AuxDegData, AuxMeshData
+export Form, @form
 export gmquadrature
 export integrate
 export ref_integrate
+
 
 end; #module
 

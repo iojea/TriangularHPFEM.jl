@@ -13,8 +13,9 @@ include("Meshes/Meshes.jl")
 include("PolyFields/PolyFields.jl")
 include("Spaces/Spaces.jl")
 include("Quadratures/Quadratures.jl")
-
-
+include("Problems/Problems.jl")
+using .Quadratures
+export @form
 
 @publish Meshes HPPoint
 @publish Meshes HPEdge
@@ -47,6 +48,14 @@ include("Quadratures/Quadratures.jl")
 @publish PolyFields StandardBasis
 @publish PolyFields _outer
 @publish PolyFields dot
+@publish PolyFields EvalType
+@publish PolyFields Eval
+@publish PolyFields Pass
+@publish PolyFields Compose
+@publish PolyFields evaluate
+@publish PolyFields AffineTransformation
+@publish PolyFields affine!
+@publish PolyFields area
 
 @publish Quadratures QScheme
 @publish Quadratures Measure
@@ -62,10 +71,7 @@ include("Quadratures/Quadratures.jl")
 @publish Quadratures ref_integrate
 
 @publish Spaces show
-@publish Spaces polynize
 @publish Spaces basis
-
-@publish Spaces Integrand
 @publish Spaces StdScalarSpace
 @publish Spaces StdVectorSpace
 @publish Spaces StdTensorSpace
@@ -77,11 +83,11 @@ include("Quadratures/Quadratures.jl")
 @publish Spaces gradient
 @publish Spaces divergence
 @publish Spaces laplacian
-@publish Spaces ∇
-@publish Spaces coefftype
 @publish Spaces dot
-@publish Spaces ∫
 @publish Spaces order
+
+@publish Problems FEProblem
+
 end;
 
 #@publish Spaces BasisIterator
