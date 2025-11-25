@@ -1,6 +1,6 @@
 name = "TriangularhpFEM"
 uuid = "563cddf2-6e0b-42e9-b4ef-ce1a8aa3ba4e"
-version = "1.0.0-DEV"
+version = "0.1.0-DEV"
 authors = ["Ignacio Ojea"]
 
 [deps]
@@ -29,18 +29,14 @@ DocStringExtensions = "0.9.3"
 ExactPredicates = "2.2.8"
 FixedSizeArrays = "1.2.0"
 LinearAlgebra = "1.11.0"
-Makie = "0.22.2"
 Markdown = "1.11.0"
 Pkg = "1.11.0"
-Polynomials = "4.0.21"
 Printf = "1.11.0"
 SparseArrays = "1.12.0"
 StaticArrays = "1.9.13"
 TensorCast = "0.4.9"
 TensorOperations = "5.3.1"
 Test = "1.11.0"
-Triangulate = "2.4.0"
-julia = "1.6.7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
