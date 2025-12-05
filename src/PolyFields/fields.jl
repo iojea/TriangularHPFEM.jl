@@ -198,9 +198,9 @@ LinearAlgebra.dot(p::PolyVectorField,q::PolyVectorField) = dot(p.tensor,q.tensor
 A struct for defining and updating an affine transformation from the reference triangle to some other triangle. 
 """
 struct AffineTransformation{F}
-    A::MMatrix{F,2,2}
-    iA::MMatrix{F,2,2}
-    b::MVector{F,2}
+    A::MMatrix{2,2,F,4}
+    iA::MMatrix{2,2,F,4}
+    b::MVector{2,F}
     jacobian::Base.RefValue{F}
     function AffineTransformation{F}(A,b) where F<:Number
         @assert size(A)==(2,2)
@@ -214,6 +214,7 @@ function AffineTransformation(A,b)
     T = promote_type(TA,Tb)
     AffineTransformation{T}(A,b)
 end
+
 AffineTransformation{F}() where F = AffineTransformation(@MMatrix(zeros(F,2,2)),@MVector(zeros(F,2)))
 
 (aff::AffineTransformation)(x) = aff.A*x+aff.b

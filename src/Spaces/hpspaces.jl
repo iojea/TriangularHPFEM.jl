@@ -35,7 +35,7 @@ combine(::Order{0},::Order{B}) where B = Order{B}()
 
 
 basis(::StdScalarSpace) = StandardBasis
-
+basis(::StdScalarSpace,p) = StandardBasis(p)
 # # Sintactic sugar
 
 #struct Integrand

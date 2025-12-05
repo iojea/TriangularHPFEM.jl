@@ -135,7 +135,7 @@ Given a triangle `t` belonging to a `mesh`, it returns the degrees `p₁<=p₂<=
 function pnodes(t::HPTriangle{I},mesh::HPMesh{F,I,P}) where {F,I,P}
     (;edgelist) = mesh
     eds = edges(t)
-    p   = degree.(getindices(edgelist,eds))
+    p   = Tuple(degree.(getindices(edgelist,eds)))
     pind = psortperm(p)
     p[pind],first.(eds[pind])
 end
@@ -228,10 +228,11 @@ _boundary_segments(n) = reduce(hcat,[i,mod1(i+1,n)] for i in 1:n)
 
 Computes the dimension of the space ℓp₁p₂p₃. 
 """
-compute_dimension(p₁, p₂, p₃) = sum(min(p₂, p₃ - j) + 1 for j = 0:p₁);
-compute_dimension(p₁, p₂) = compute_dimension(p₁, p₂, p₂)
-compute_dimension(p₁) = compute_dimension(p₁, p₁)
+compute_dimension(p₁::Integer, p₂::Integer, p₃::Integer) = sum(min(p₂, p₃ - j) + 1 for j = 0:p₁);
+compute_dimension(p₁::Integer, p₂::Integer) = compute_dimension(p₁, p₂, p₂)
+compute_dimension(p₁::Integer) = compute_dimension(p₁, p₁)
 compute_dimension(t::T) where {T<:AbstractArray} = compute_dimension(t...)
+compute_dimension(t::Tuple) = compute_dimension(t...)
 
 """
     degrees_of_freedom_by_edge(mesh::HPMesh{F,I,P}) where {F<:AbstractFloat,I<:Integer,P<:Integer}

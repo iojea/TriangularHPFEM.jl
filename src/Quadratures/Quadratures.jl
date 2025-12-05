@@ -10,6 +10,7 @@ using Polynomials
 using SparseArrays
 using FixedSizeArrays
 using TensorOperations
+using Markdown
 using ..Meshes
 using ..PolyFields
 using ..Spaces
@@ -20,6 +21,7 @@ include("gmquads.jl")
 include("measures.jl")
 include("forms.jl")
 include("integration.jl")
+include("show.jl")
 
 export QScheme, Measure, AuxDegData, AuxMeshData
 export Form, @form

@@ -25,7 +25,7 @@ function _initvectors(I,F,ℓ)
     fill!(ivec,zero(I))
     jvec = FixedSizeArray{I,1}(undef,ℓ)
     fill!(jvec,zero(I))
-    vals = FizedSizeArray{F,1}(undef,ℓ)
+    vals = FixedSizeArray{F,1}(undef,ℓ)
     fill!(vals,zero(F))
     ivec,jvec,vals
 end
@@ -33,7 +33,6 @@ end
 function integrate(::Val{2},form::Form,space::Spaces.AbstractSpace)
     (;integrands,measures) = form
     mesh = domainmesh(first(measures))
-    println(typeof(mesh))
     F = floattype(mesh)
     Itype = inttype(mesh)
     N = degrees_of_freedom!(mesh)
@@ -45,23 +44,23 @@ function integrate(::Val{2},form::Form,space::Spaces.AbstractSpace)
     sparse(ivec,jvec,vals,N,N)
 end
 
-function buildmatrix!(ivec,jvec,vals,fun,measure,space,::Order{B}) where B
+function buildmatrix!(ivec,jvec,vals,fun,measure,space,order::Order{B}) where B
     (;aux,mesh) = measure
     (;points,trilist,dofs) = mesh
     (;by_tri) = dofs
     F = eltype(vals)
     Itype = eltype(ivec)
-    tensordict = Dictionary{NTuple{3,Itype},FizedSizeArray{F,2+sum(B)}}()
+    tensordict = Dictionary{NTuple{3,Itype},FixedSizeArray{F,2+sum(B)}}()
     aff = AffineTransformation{F}()
-    Ascale = collapser(aff);
+    Ascale = collapser(order,aff);
     r = 1
-    for tri in trilist
+    for tri in keys(trilist)
         p,_ = pnodes(tri,mesh)
         isin,token = gettoken(tensordict,p)
         if isin
             loctensor = gettokenvalue(tensordict,token)
         else
-            loctensor = build_local_tensor(Val(2),fun,p,space)
+            loctensor = build_local_tensor(Val(2),order,space,fun,p)
             set!(tensordict,p,loctensor)
         end
         affine!(aff,points[tri])
@@ -77,16 +76,16 @@ function buildmatrix!(ivec,jvec,vals,fun,measure,space,::Order{B}) where B
     end
 end
 
-function build_local_tensor(::Val{2},order::Order{B},space,fun::PolyField,p) where B
-    base = basis(space)
+function build_local_tensor(::Val{2},order::Order{B},space,fun,p) where B
+    base = basis(space,p)
     N = length(base)
     inner_dims = length(B)
     outer_dims = sum(B)
     dims = ((N for _ in 1:inner_dims)...,(2 for _ in 1:outer_dims)...)
     local_tensor = FixedSizeArray{Float64}(undef,dims...)
-    for (i,φᵢ) in enumerate(base(p))
-        for (j,φⱼ) in enumerate(base(p))
-            local_tensor[i,j] = ref_integrate(fun(φᵢ,φⱼ))
+    for (i,φᵢ) in enumerate(base)
+        for (j,φⱼ) in enumerate(base)
+            local_tensor[i,j,:,:] .= ref_integrate(fun(φᵢ,φⱼ))
         end
     end
     return local_tensor

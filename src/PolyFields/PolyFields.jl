@@ -30,5 +30,7 @@ export jac
 export area
 export EvalType,Eval,Compose,Pass
 export evaluate
+export ∇
+export Δ
 
 end; #module

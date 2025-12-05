@@ -211,15 +211,15 @@ function Base.show(io::IO,mime::MIME"text/plain",mesh::HPMesh{I,P}) where {I,P}
         + $(length(mesh.edgelist)) edges.
     """)
     show(io,mime,header)
-    println(io)
-    show(io,mime,mesh.points)
-    println(io)
-    println(io)
-    show(io,mime,mesh.trilist)
-    println(io)
-    println(io)
-    println(io)
-    show(io,mime,mesh.edgelist)
+    # println(io)
+    # show(io,mime,mesh.points)
+    # println(io)
+    # println(io)
+    # show(io,mime,mesh.trilist)
+    # println(io)
+    # println(io)
+    # println(io)
+    # show(io,mime,mesh.edgelist)
 end
 
 

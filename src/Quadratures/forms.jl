@@ -32,15 +32,27 @@ struct Form
     measures
 end
 
-function Form(t::Tuple,m::Tuple) 
+function Form(t::Tuple,m::Tuple)
+    println(t)
+    println(m)
     tnargs = Tuple(first(methods(tt)).nargs-1 for tt in t)
+    println(tnargs)
     all(tnargs .== tnargs[1]) || throw(ArgumentError("Number of arguments vary from term to term."))
     all(typeof(mm)<:Measure for mm in m) || throw(ArgumentError("Measures are not measures."))
+    println(typeof(t))
+    println(typeof(m))
     Form(tnargs[1],t,m)
 end
 Form(f::Function,m::Measure) = Form((f,),(m,))
-Form(t::Tuple,m::Measure) = Form(t,Tuple(m for _ in 1:length(t)))
+#Form(t::Tuple,m::Measure) = Form(t,Tuple(m for _ in 1:length(t)))
 
+function _form(x...)
+    n = length(x)
+    n%2==0 || throw(ArgumentError("Malformed expression. Each term must be of the form `∫(fun)*dΩ` where `fun` is some function and `dΩ` is a `Measure`."))
+    k = n÷2
+    Form(tuple(x[1:k]...),tuple(x[k+1:end]...))
+end
+    
 bad_integrand(::Any) = false
 function bad_integrand(expr::Expr)
     expr.head == :call && expr.args[1] == :+ && return true
@@ -111,7 +123,7 @@ macro form(expr)
        par = get_parameters(expr)
        terms = get_terms(expr)
        tira = fracture(terms,par,false)
-       Expr(:(=),name,Expr(:call,:Form,tira[1:2:end]...,tira[2:2:end]...))
+       Expr(:(=),name,Expr(:call,:_form,tira[1:2:end]...,tira[2:2:end]...))
 end
 
 
