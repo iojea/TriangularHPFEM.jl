@@ -5,6 +5,15 @@ const EdgeList{I,P} = Dictionary{HPEdge{I},EdgeProperties{P,Bool}} where {I,P}
 
 abstract type HPTriangulation end
 
+"""
+
+    DOFs{I<:Integer}
+an `struct` for storing the degrees of freedom of a mesh. It can be initialized as an empty structure with
+```julia
+    julia> DOFs(UInt8)
+```
+In practice, a `DOFs` is created empty an then filled using `degrees_of_freedom!(mesh)`.
+"""
 struct DOFs{I<:Integer}
     n::Base.RefValue{I}
     by_edge::Dictionary{HPEdge{I}, SArray{S,I, 1} where S<:Tuple}
@@ -47,10 +56,6 @@ function HPMesh(mat::Matrix,tris::TriangleList,edgs::EdgeList)
     HPMesh(HPPoint.(eachcol(mat)),tris,edgs)
 end
 
-function maybeconvert(::Type{T},arr::AbstractArray) where T
-    eltype(arr)==T ? arr : convert.(T,arr)
-end
-
 function HPMesh{F,I,P}(tri::TriangulateIO) where {F,I,P}
     (;pointlist,trianglelist,edgelist,edgemarkerlist) = tri
     points = HPPoint{2,F}.(point for point in eachcol(pointlist))
@@ -60,23 +65,69 @@ function HPMesh{F,I,P}(tri::TriangulateIO) where {F,I,P}
     HPMesh(points,triangles,edges)
 end
 
+
+
+"""
+    maybeconvert(::Type{T},arr) where T
+If necessary converts the elements of `arr` to type `T`.  
+"""
+function maybeconvert(::Type{T},arr::AbstractArray) where T
+    eltype(arr)==T ? arr : convert.(T,arr)
+end
+
+
+"""
+    degtype(::HPMesh{F,I,P}) wehere {F,I,P}
+returns `P`  
+"""
 degtype(::HPMesh{F,I,P}) where {F,I,P} = P
+"""
+    inttype(::HPMesh{F,I,P}) wehere {F,I,P}
+returns `I`  
+"""
 inttype(::HPMesh{F,I,P}) where {F,I,P} = I
+"""
+    floattype(::HPMesh{F,I,P}) wehere {F,I,P}
+returns `F`  
+"""
 floattype(::HPMesh{F,I,P}) where {F,I,P} = F
 
 function Base.copy(mesh::HPMesh)
     HPMesh(deepcopy(mesh.points),deepcopy(mesh.trilist),deepcopy(mesh.edgelist))
 end
 
+"""
+  edges(m)
+retuns the edges of `m`, being `m` an `HPMesh` or an `EdgeList`.  
+"""
 @inline edges(list::T) where T<:EdgeList = keys(list)
-@inline triangles(list::T) where T<:TriangleList = keys(list)
 @inline edges(mesh::T) where T<:HPMesh = keys(mesh.edgelist)
-@inline triangles(mesh::T) where T<:HPMesh = keys(mesh.trilist) 
+"""
+  triangles(m) 
+retuns the triangles of `m`, being `m` and `HPMesh` or a `TriList`.
+"""
+@inline triangles(list::T) where T<:TriangleList = keys(list)
+@inline triangles(mesh::T) where T<:HPMesh = keys(mesh.trilist)
+"""
+  tridofs(m)
+retuns the degrees of freedom of the mesh `m`.
+"""
 @inline tridofs(mesh) = mesh.dofs.by_tri
 
-
+"""
+    isgreen(t::HPTriangle,m::HPMesh
+retuns `true` if triangle `t` in `m` is marked green.
+"""
 @inline isgreen(t::HPTriangle,m::HPMesh) = m.trilist[t].refine[] == 1
+"""
+    isblue(t::HPTriangle,m::HPMesh
+retuns `true` if triangle `t` in `m` is marked blue.
+"""
 @inline isblue(t::HPTriangle,m::HPMesh)  = m.trilist[t].refine[] == 2
+"""
+    isred(t::HPTriangle,m::HPMesh
+retuns `true` if triangle `t` in `m` is marked red.
+"""
 @inline isred(t::HPTriangle,m::HPMesh)  = m.trilist[t].refine[] == 3
 
 """
@@ -215,6 +266,10 @@ function meshhp(vertices,h;segments=nothing,markers=nothing,holes=nothing)
     HPMesh{F,I,P}(tri)
 end
 
+"""
+    _boundary_segments(n)
+creates pairs of indices for building a sequence of segments from a list of points.  
+"""
 _boundary_segments(n) = reduce(hcat,[i,mod1(i+1,n)] for i in 1:n)
 
 
@@ -224,7 +279,7 @@ _boundary_segments(n) = reduce(hcat,[i,mod1(i+1,n)] for i in 1:n)
     compute_dimension(p₁,p₂,p₃)
     compute_dimension(p₁,p₂)   
     compute_dimension(p₁)
-    compute_dimension(t::AbstractArray)
+    compute_dimension(t::Tuple)
 
 Computes the dimension of the space ℓp₁p₂p₃. 
 """
@@ -306,6 +361,11 @@ function marked_dof(mesh::HPMesh{F,I,P},marker) where {F,I,P}
     end
     _marked_dof(mesh,marker)
 end
+
+"""
+    _marked_dof(mesh::HPMesh,markerslist::AbstractVector)
+internal function. Returns a list of all degrees of freedom marked with a marker in `markerlist`.  
+"""
 function _marked_dof(mesh::HPMesh{F,I,P},markerslist::AbstractVector) where {F,I,P}
     (;edgelist,dofs) = mesh
     (;by_edge) = dofs
@@ -334,9 +394,13 @@ function boundary_dof(mesh::HPMesh{F,I,P},by_edge) where {F,I,P}
     marked_dof(mesh,by_edge,[1,2])
 end
 
-function dirichlet_dof(mesh::HPMesh{F,I,P}) where {F,I,P}
-    marked_dof(mesh,1)
-end
+
+"""
+   dirichlet_dof(mesh)
+returns all degrees of freedom corresponding to the Dirichlet boundary of `mesh`.  
+"""
+dirichlet_dof(mesh::HPMesh{F,I,P}) where {F,I,P} = marked_dof(mesh,1)
+
 
 """
     $(SIGNATURES)

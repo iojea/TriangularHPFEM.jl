@@ -222,12 +222,9 @@ function Base.show(io::IO,mime::MIME"text/plain",mesh::HPMesh{I,P}) where {I,P}
     # show(io,mime,mesh.edgelist)
 end
 
-
-function Base.show(io::IO,mesh::HPMesh)
-    println(io)
-    show(io,mesh.points)
-    println(io)
-    show(io,mesh.trilist)
-    println(io)
-    show(io,mesh.edgelist)
+function Base.show(io::IO,mime::MIME"text/plain",p::HPPoint)
+    println(typeof(p))
+    show(io,mime,p.data)
 end
+
+

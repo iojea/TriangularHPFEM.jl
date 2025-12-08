@@ -16,15 +16,39 @@ struct EdgeProperties{P<:Integer,Bool}
     refine::Base.RefValue{Bool}
     #adjacent::SVector{2,I}
 end
-
 EdgeProperties(d::P,m::P,r::Bool) where P<:Integer = EdgeProperties(Ref(d),m,Ref(r))
 EdgeProperties(e::EdgeProperties)  = EdgeProperties(e.degree,e.marker,e.refine)
 
+
+"""
+    ismarked(e::EdgeProperties)
+returs `true` if `e` is marked for refinement. 
+"""
 @inline ismarked(e::EdgeProperties)        = e.refine[]
+"""
+    degree(e::EdgeProperties)
+returs the degree of `e`. 
+"""
 @inline degree(e::EdgeProperties)          = e.degree[]
+"""
+    marker(e::EdgeProperties)
+returs the marker of `e`. The marker indicates if `e` is a boundary edge with Dirichlet or Neumann condition, an interior boundary, etc. 
+"""
 @inline marker(e::EdgeProperties)          = e.marker
+"""
+    mark!(e::EdgeProperties)
+marks `e` for refinement.  
+"""
 @inline mark!(e::EdgeProperties)           = e.refine[] = true
+"""
+    setdegree!(e::EdgeProperties,deg)
+sets the degree of `e`.  
+"""
 @inline setdegree!(e::EdgeProperties,deg)  = e.degree[] = deg
+"""
+    isinterior(e::EdgeProperties)
+returns `true` if the edge is an interior one.  
+"""
 @inline isinterior(e::EdgeProperties)      = e.marker != 1
 
 

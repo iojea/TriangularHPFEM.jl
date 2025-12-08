@@ -1,3 +1,7 @@
+"""
+   correct_boundary_circular(mesh::HPMesh)
+corrects the boundary nodes of `mesh` projecting them to the boundary.  
+"""
 function correct_boundary_circular(mesh::HPMesh)
     (;points,edgelist) = mesh
     for e in keys(edgelist)
@@ -11,6 +15,10 @@ function correct_boundary_circular(mesh::HPMesh)
     end
 end
 
+"""
+    circmesh_graded_center(h,μ;maxiter,rec)
+builds a mesh of a unitary disc, with triangles of edgelength `h`, and graded towards the center with graduation parameter `μ`.  
+"""
 function circmesh_graded_center(h,μ;maxiter=4,rec=false)
     k = 0
     mesh = circmesh(h)
@@ -32,6 +40,10 @@ function circmesh_graded_center(h,μ;maxiter=4,rec=false)
 end
 
 
+"""
+   l_mesh(h)
+builds a mesh of an L shaped domain with triangles of edge-length `h`. 
+"""
 function l_mesh(h)
     x = range(start=0,stop=2,length=Int(1+2÷h))
     x0 = range(start=0,stop=1,length=Int(1+1÷h))    
@@ -60,6 +72,10 @@ function l_mesh(h)
 end
 
 
+"""
+   l_graded(h,μ;maxiter=6,rec=false)
+builds a mesh of an L shaped domain with triangles of edge-length `h`, graded towards the inner vertex with graduation parameter `μ`.
+"""
 function l_graded(h,μ;maxiter=6,rec=false)
     k = 0
     mesh = l_mesh(h)

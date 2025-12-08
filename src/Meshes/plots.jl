@@ -1,3 +1,4 @@
+
 @recipe(PlotHPMesh, mesh) do scene
     Attributes(
                linewidth = 0.5,
@@ -8,6 +9,10 @@
 end
 
 
+"""
+    plot!(m::HPMesh)
+Plots `m` using `Makie`.   
+"""
 function Makie.plot!(p::PlotHPMesh)
     (;mesh) = p
     lift(p[1]) do mesh
@@ -58,6 +63,10 @@ end
             )
 end
 
+"""
+    plot!(s::HPSolution)
+plots `s` using `Makie`.  
+"""
 function Makie.plot!(p::PlotSolHP)
     (;mesh,u) = p
     lift(p[1]) do mesh
@@ -73,6 +82,10 @@ function Makie.plot!(p::PlotSolHP)
     return p
 end
 
+"""
+    plot_degs(mesh::HPMesh)
+plots `mesh` coloring the degrees of the edges, using `Makie`.
+"""
 function plot_degs(mesh::HPMesh)
     (;points,edgelist) = mesh
     degs = degree.(edgelist)
@@ -89,6 +102,10 @@ function plot_degs(mesh::HPMesh)
     f
 end
 
+"""
+    animate_refinement(meshes,path)
+Creates an animation, stored in `path` from a list of meshes.   
+"""
 function animate_refinement(meshes,path)
     k = Observable(1)
     msh = @lift(meshes[$k])
